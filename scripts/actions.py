@@ -153,7 +153,7 @@ class RobotControl:
     def go_to(self, color: str) -> Result:
         if self.turn_to(color) is Result.FAILURE:
             print(f"Could not find {color}")
-            return
+            return Result.FAILURE
 
         print("1")
 
@@ -171,6 +171,8 @@ class RobotControl:
             angular = -center * 0.01
             self.set_speed(linear_x=linear, angular_z=angular)
             rate.sleep()
+
+        return Result.SUCCESS
 
     def run(self):
         self.go_to("red")
