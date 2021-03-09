@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 from typing import Optional
+import enum
 
 import cv_bridge
 import rospy
@@ -10,6 +11,12 @@ from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import LaserScan
 from tf.transformations import euler_from_quaternion
+
+
+@enum.unique
+class Result(enum.Enum):
+    FAILURE = enum.auto()
+    SUCCESS = enum.auto()
 
 
 class ImageProcessor:
@@ -39,7 +46,7 @@ class ImageProcessor:
     def image_callback(self, data: Image):
         self.image = self.bridge.imgmsg_to_cv2(data, desired_encoding="bgr8")
 
-    def get_center_for_color(self, color: str) -> Optional[int]:
+    def get_center_for_color(self, color: str) -> float:
         """Gets the center of the image for the given color.
 
         Parameters:
@@ -76,9 +83,9 @@ class ImageProcessor:
         # Get the center of the dumbbell if color pixels are found
         if M["m00"] > 0:
             # center of the colored pixels in the image
-            return int(M["m10"] / M["m00"]) - w // 2
+            return M["m10"] / M["m00"] - w / 2
 
-        return None
+        return float("inf")
 
 
 class RobotControl:
@@ -119,47 +126,60 @@ class RobotControl:
 
         return yaw
 
-    def turn_to(self, color: str):
-        center = None
+    def turn_to(self, color: str) -> Result:
+        center = float("inf")
         turn_distance = 0
         rate = rospy.Rate(10)
         speed = 0
         max_speed = 0.5
 
-        while (
-            center is None or abs(center) > 10
-        ) and turn_distance < 2 * np.pi:
-            print(center)
+        while abs(center) > 10 and abs(turn_distance) < 2 * np.pi:
             center = self.image_processor.get_center_for_color(color)
 
-            if center is None:
-                speed = min(speed + 0.01, max_speed)
-            else:
-                speed = min(speed + 0.01, max_speed, abs(center * 0.01))
-                speed = -speed if center > 0 else speed
+            speed = min(abs(speed) + 0.01, max_speed, abs(center * 0.01))
+            speed = -speed if center > 0 else speed
 
             turn_distance += speed / 10
             self.set_speed(angular_z=speed)
-
-            speed = abs(speed)
             rate.sleep()
-
+            print(f"center: {center}")
+        print("DONE")
         self.set_speed()
 
-        if center is None:
-            print(f"Could not find {color}!")
+        if center == float("inf"):
+            return Result.FAILURE
+        return Result.SUCCESS
 
-        else:
-            print(f"Found {color}!")
+    def go_to(self, color: str) -> Result:
+        if self.turn_to(color) is Result.FAILURE:
+            print(f"Could not find {color}")
+            return
+
+        print("1")
+
+        distance = self.ranges[0]
+        center = self.image_processor.get_center_for_color(color)
+
+        rate = rospy.Rate(10)
+        speed = 0
+        max_speed = 1
+        while distance > 0.3 or abs(center) > 10:
+            center = self.image_processor.get_center_for_color(color)
+            distance = self.ranges[0]
+
+            linear = min(speed + 0.05, max_speed, distance * 0.1)
+            angular = -center * 0.01
+            self.set_speed(linear_x=linear, angular_z=angular)
+            rate.sleep()
 
     def run(self):
-        self.turn_to("red")
+        self.go_to("red")
         rospy.sleep(2)
-        self.turn_to("blue")
+        self.go_to("blue")
         rospy.sleep(2)
-        self.turn_to("green")
+        self.go_to("green")
         rospy.sleep(2)
-        self.turn_to("yellow")
+        self.go_to("yellow")
 
 
 if __name__ == "__main__":
