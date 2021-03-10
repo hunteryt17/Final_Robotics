@@ -48,13 +48,12 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-#add_message_files(
-#    FILES
-#    QLearningReward.msg
-#    QMatrix.msg
-#    QMatrixRow.msg
-#    RobotMoveDBToBlock.msg
-#)
+add_message_files(
+    FILES
+    UserCommand.msg
+    Reward.msg
+    ActionStatus.msg
+)
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -107,8 +106,8 @@ generate_messages(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES q_learning_project
-#  CATKIN_DEPENDS roscpp rospy std_msgs
+#  LIBRARIES robodog
+#  CATKIN_DEPENDS roscpp rospy std_msgs message_runtime
 #  DEPENDS system_lib
 )
 
