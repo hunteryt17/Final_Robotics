@@ -10,6 +10,7 @@ from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import LaserScan
 from tf.transformations import euler_from_quaternion
+import moveit_commander
 
 
 class ImageProcessor:
@@ -87,6 +88,7 @@ class RobotControl:
         self.odom = None
         self.ranges = None
         self.image_processor = ImageProcessor()
+        self.arm_manipulator = ArmManipulator()
 
         self.speed_pub = rospy.Publisher("/cmd_vel", Twist, queue_size=10)
         self.odom_subs = rospy.Subscriber("/odom", Odometry, self.process_odom)
@@ -153,13 +155,49 @@ class RobotControl:
             print(f"Found {color}!")
 
     def run(self):
-        self.turn_to("red")
-        rospy.sleep(2)
-        self.turn_to("blue")
-        rospy.sleep(2)
-        self.turn_to("green")
-        rospy.sleep(2)
-        self.turn_to("yellow")
+        self.arm_manipulator.sad_emote()
+        self.arm_manipulator.happy_emote()
+
+
+
+class ArmManipulator:
+    def __init__(self):
+        # the interface to the group of joints making up the turtlebot3
+        # openmanipulator arm
+        self.move_group_arm = moveit_commander.MoveGroupCommander("arm")
+
+        # the interface to the group of joints making up the turtlebot3
+        # openmanipulator gripper
+        self.move_group_gripper = moveit_commander.MoveGroupCommander("gripper")
+
+        # Position the arm
+        self.reset_arm_position()
+    
+
+    def reset_arm_position(self):
+        arm_joint_goal = [0.0, 0.0, 0.0, 0.0]
+        self.move_group_arm.go(arm_joint_goal, wait=True)
+        self.move_group_arm.stop()
+        self.open_grip()
+
+    def open_grip(self):
+        gripper_joint_goal = [.01,.01]
+        self.move_group_gripper.go(gripper_joint_goal, wait=True)
+        self.move_group_gripper.stop()
+    
+    def sad_emote(self):
+        arm_joint_goal = [1, 0.5, -0.5, 1.0]
+        self.move_group_arm.go(arm_joint_goal, wait=True)
+        self.move_group_arm.stop()
+        self.reset_arm_position()
+
+    def happy_emote(self):
+        arm_joint_goal = [0, -0.5, -0.3, -0.15]
+        self.move_group_arm.go(arm_joint_goal, wait=True)
+        self.move_group_arm.stop()
+        self.reset_arm_position()
+
+
 
 
 if __name__ == "__main__":
