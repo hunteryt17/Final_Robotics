@@ -12,7 +12,7 @@ from nav_msgs.msg import Odometry
 from sensor_msgs.msg import LaserScan
 from tf.transformations import euler_from_quaternion
 import moveit_commander
-
+import math
 
 @enum.unique
 class Result(enum.Enum):
@@ -175,10 +175,34 @@ class RobotControl:
             rate.sleep()
 
         return Result.SUCCESS
+    
+    def pick_up_dumbbell(self, color:str) -> Result:
+        """
+        Goes to dumbbell and picks it up
+        
+        Parameters:
+            color: string of desired color to be picked up
+        Returns:
+            Result enum type of FAILURE or SUCCESS
+        """
+
+        if self.go_to(color) is Result.FAILURE:
+            return Result.FAILURE
+
+        rate = rospy.Rate(10)
+        
+        while self.ranges[0] > 0.1:
+            rate.sleep()
+            continue
+        
+        self.set_speed()
+        self.arm_manipulator.lift_dumbbell()
+        print(self.ranges[0])
+        return Result.SUCCESS
+        
 
     def run(self):
         self.arm_manipulator.sad_emote()
-        self.arm_manipulator.happy_emote()
 
 
 
@@ -197,7 +221,7 @@ class ArmManipulator:
     
 
     def reset_arm_position(self):
-        arm_joint_goal = [0.0, 0.0, 0.0, 0.0]
+        arm_joint_goal = [0.0, 0.4, 0.5, -0.9]
         self.move_group_arm.go(arm_joint_goal, wait=True)
         self.move_group_arm.stop()
         self.open_grip()
@@ -219,7 +243,20 @@ class ArmManipulator:
         self.move_group_arm.stop()
         self.reset_arm_position()
 
+    def pick_up_position(self):
+        arm_joint_goal = [0,.4,.5,-.9]
+        self.move_group_arm.go(arm_joint_goal, wait=True)
+        self.move_group_arm.stop()
+        self.open_grip()
 
+    def lift_dumbbell(self):
+        arm_joint_goal = [0,
+            math.radians(0.0),
+            math.radians(-20),
+            math.radians(-20)]
+        self.move_group_arm.go(arm_joint_goal, wait=True)
+        self.move_group_arm.stop()
+    
 
 
 if __name__ == "__main__":
