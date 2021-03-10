@@ -53,6 +53,7 @@ add_message_files(
     UserCommand.msg
     Reward.msg
     ActionStatus.msg
+    Action.msg
 )
 
 ## Generate services in the 'srv' folder
