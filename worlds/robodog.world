@@ -112,7 +112,7 @@
         <collision name='collision'>
           <geometry>
             <mesh>
-              <uri>model://Final_Robotics/gazebo_custom_meshes/robot_dumbbell_red.dae</uri>
+              <uri>model:Final_Robotics/gazebo_custom_meshes/robot_dumbbell_red.dae</uri>
             </mesh>
           </geometry>
           <surface>
