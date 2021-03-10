@@ -1,15 +1,14 @@
 #! /usr/bin/env python3
-from typing import Optional
 import enum
+import time
 
 import cv_bridge
+import numpy as np
 import rospy
 from cv2 import cv2
-from sensor_msgs.msg import Image
-import numpy as np
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
-from sensor_msgs.msg import LaserScan
+from sensor_msgs.msg import Image, LaserScan
 from tf.transformations import euler_from_quaternion
 
 
@@ -112,20 +111,6 @@ class RobotControl:
 
         self.speed_pub.publish(speed)
 
-    def get_yaw(self) -> float:
-        """Takes in a Pose object and returns yaw."""
-        p = self.odom.pose
-        yaw = euler_from_quaternion(
-            [
-                p.orientation.x,
-                p.orientation.y,
-                p.orientation.z,
-                p.orientation.w,
-            ]
-        )[2]
-
-        return yaw
-
     def turn_to(self, color: str) -> Result:
         center = float("inf")
         turn_distance = 0
@@ -142,8 +127,6 @@ class RobotControl:
             turn_distance += speed / 10
             self.set_speed(angular_z=speed)
             rate.sleep()
-            print(f"center: {center}")
-        print("DONE")
         self.set_speed()
 
         if center == float("inf"):
@@ -154,8 +137,6 @@ class RobotControl:
         if self.turn_to(color) is Result.FAILURE:
             print(f"Could not find {color}")
             return Result.FAILURE
-
-        print("1")
 
         distance = self.ranges[0]
         center = self.image_processor.get_center_for_color(color)
@@ -174,14 +155,57 @@ class RobotControl:
 
         return Result.SUCCESS
 
+    def follow(self, color: str) -> Result:
+        if self.turn_to(color) is Result.FAILURE:
+            print(f"Could not find {color}")
+            return Result.FAILURE
+
+        while not self.ranges:
+            pass
+
+        distance = self.ranges[0]
+        center = self.image_processor.get_center_for_color(color)
+
+        rate = rospy.Rate(10)
+        speed = 0
+        max_speed = 1
+        stopped_time = 0
+        current_time = time.time()
+        while distance > 0.3 or abs(center) > 10 or stopped_time < 5:
+            center = self.image_processor.get_center_for_color(color)
+            distance = self.ranges[0]
+
+            if abs(center) <= 10:
+                angular = 0
+            elif center == float("inf"):
+                angular = 0.5
+            else:
+                angular = min(-center * 0.01, 0.5)
+
+            if distance <= 0.3 or center == float("inf"):
+                linear = 0
+            else:
+                linear = min(speed + 0.05, max_speed, distance * 0.1)
+            self.set_speed(linear_x=linear, angular_z=angular)
+
+            if linear == 0 and angular == 0:
+                stopped_time = time.time() - current_time
+            else:
+                current_time = time.time()
+            rate.sleep()
+
+        return Result.SUCCESS
+
     def run(self):
-        self.go_to("red")
-        rospy.sleep(2)
-        self.go_to("blue")
-        rospy.sleep(2)
-        self.go_to("green")
-        rospy.sleep(2)
-        self.go_to("yellow")
+        # self.go_to("red")
+        # rospy.sleep(2)
+        # self.go_to("blue")
+        # rospy.sleep(2)
+        # self.go_to("green")
+        # rospy.sleep(2)
+        # self.go_to("yellow")
+        # rospy.sleep(2)
+        self.follow("blue")
 
 
 if __name__ == "__main__":
