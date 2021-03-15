@@ -13,6 +13,7 @@ from sensor_msgs.msg import LaserScan
 from tf.transformations import euler_from_quaternion
 import moveit_commander
 import math
+#from robodog.msg import ActionStatus
 
 @enum.unique
 class Result(enum.Enum):
@@ -100,6 +101,8 @@ class RobotControl:
         self.speed_pub = rospy.Publisher("/cmd_vel", Twist, queue_size=10)
         self.odom_subs = rospy.Subscriber("/odom", Odometry, self.process_odom)
         self.scan_sub = rospy.Subscriber("scan", LaserScan, self.process_scan)
+        #self.action_status_pub = rospy.Publisher("/robodog/action_status", ActionStatus, queue_size=10)
+       # self.action_status = ActionStatus()
 
     def process_odom(self, data: Odometry):
         self.odom = data
@@ -191,19 +194,90 @@ class RobotControl:
 
         rate = rospy.Rate(10)
         
-        while self.ranges[0] > 0.1:
+        while self.ranges[0] > 0.2:
             rate.sleep()
             continue
         
         self.set_speed()
         self.arm_manipulator.lift_dumbbell()
-        print(self.ranges[0])
+
+        # check to see if succesfully lifted dumbbell
+        if self.ranges[0] > 0.3:
+            return Result.SUCCESS
+        else:
+            return Result.FAILURE
+    
+    def fetch(self, color: str) -> Result:
+        """
+        Goes to dumbbell, picks it up, returns to person
+        
+        Parameters:
+            color: string of desired color to be picked up
+        Returns:
+            Result enum type of FAILURE or SUCCESS
+        """
+
+        #pick up dumbbell
+        if self.pick_up_dumbbell(color) is Result.FAILURE:
+            return Result.FAILURE
+
+        # go to person
+        if self.go_to("yellow") is Result.FAILURE:
+            return Result.FAILURE
+        
+        # place dumbbell
+        self.place_dumbbell()
+
+        return Result.SUCCESS
+
+
+
+    def shake(self) -> Result:
+        """make bot perform shake"""
+        self.arm_manipulator.shake()
+        #self.action_status.complete = True
+        #self.action_status_pub.publish(self.action_status)
+        return Result.SUCCESS
+    
+    def place_dumbbell(self) -> Result:
+        """puts dumbbell on ground & move away"""
+        # place dumbbell on ground
+        self.arm_manipulator.open_grip()
+        self.arm_manipulator.reset_arm_position()
+
+        # reverse away from dumbbell
+        self.set_speed(linear_x=-0.2)
+        rospy.sleep(2)
+
+        # stop
+        self.set_speed()
+
+        return Result.SUCCESS
+
+
+    
+    def spin(self) -> Result:
+        """ robot spins in a circle """
+        turn_distance = 0
+        speed = 0.5
+        rate = rospy.Rate(10)
+
+        #make bot spin 360 deg
+        while abs(turn_distance) < np.pi * 2:
+            turn_distance += speed / 10
+            self.set_speed(angular_z=speed)
+            rate.sleep()
+        
+        #stop spinning
+        self.set_speed()
+        #self.action_status.complete = True
+        #self.action_status_pub.publish(self.action_status)
         return Result.SUCCESS
         
 
     def run(self):
-        self.arm_manipulator.sad_emote()
-
+        self.fetch("blue")
+        self.spin()
 
 
 class ArmManipulator:
@@ -232,13 +306,25 @@ class ArmManipulator:
         self.move_group_gripper.stop()
     
     def sad_emote(self):
+        """complete sad emote for bot"""
         arm_joint_goal = [1, 0.5, -0.5, 1.0]
         self.move_group_arm.go(arm_joint_goal, wait=True)
         self.move_group_arm.stop()
         self.reset_arm_position()
 
     def happy_emote(self):
+        """happy emote for bot"""
         arm_joint_goal = [0, -0.5, -0.3, -0.15]
+        self.move_group_arm.go(arm_joint_goal, wait=True)
+        self.move_group_arm.stop()
+        self.reset_arm_position()
+    
+    def shake(self):
+        """complete shake action for bot"""
+        arm_joint_goal = [0, 0.5, -0.2, -0.2]
+        self.move_group_arm.go(arm_joint_goal, wait=True)
+        self.move_group_arm.stop()
+        arm_joint_goal = [0, 0.5, -0.6, -0.2]
         self.move_group_arm.go(arm_joint_goal, wait=True)
         self.move_group_arm.stop()
         self.reset_arm_position()
@@ -250,6 +336,7 @@ class ArmManipulator:
         self.open_grip()
 
     def lift_dumbbell(self):
+        """ move arm to lifted position"""
         arm_joint_goal = [0,
             math.radians(0.0),
             math.radians(-20),
