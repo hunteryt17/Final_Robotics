@@ -31,7 +31,7 @@ This project is centered around a robotics algorithm for reinforcement learning.
 ### 3. User Interface
 (implemented in `/scripts/user_interface.py`)
 
-Although this component of the project didn't involve many complicated algorithms or code, it is stil a major component. This is how the user will interact with the robot to give it commands and rewards. The structure of the code is based on the following logic:
+Although this component of the project didn't involve many complicated algorithms or code, it is still a major component. This is how the user will interact with the robot to give it commands and rewards. The structure of the code is based on the following logic:
 * when the script is run, print a welcome message, the possible commands, and reward instructions
 * if the robot is not completing an action or getting a reward, prompt the user to enter a command
 * if the command is valid, publish it to the topic `/robodog/user_cmd`; otherwise, print an error message and prompt again until command is valid
@@ -39,11 +39,6 @@ Although this component of the project didn't involve many complicated algorithm
 * if the reward is valid, publish it to the topic `/robodog/action_reward`, then restart the loop; otherewise, print an error message and prompt again until reward is valid
 
 In order to know if the published action has been completed, the user interface node subscribes to `/robodog/action_complete` which provides information as a boolean indicating if the action has been completed. In addition, the user interface node keeps track of how many times each command has been called (correctly/successfully). That information is published with the same message that contains the user input.
-
-
-
-
-
 
 
 
@@ -55,12 +50,14 @@ In order to know if the published action has been completed, the user interface 
 
 - adding more commands and commands that are more complex
 - maybe make the learning algorithm more robust?
+- adding walls
+- defining convergence
 
 
 ## Takeaways
 
-* takeaway1
-  * 
+* Define and assign components to work on early
+  * Clearly splitting up and defining work from the start made it really easy to make sure everything got done
 
 * takeaway2
   * 
@@ -68,5 +65,43 @@ In order to know if the published action has been completed, the user interface 
 * takeaway3
   * 
 
-## Final Product Demo
+## Final Product Gifs
+
+### Actions
+
+Roll
+
+![roll](roll_action.gif)
+
+Shake
+
+![shake](shake_action.gif)
+
+Come
+
+![come](come_action.gif)
+
+Follow
+
+![follow](follow_action.gif)
+
+Find
+
+![find](find_action.gif)
+
+Follow
+
+![fetch](fetch_action.gif)
+
+### Emotes
+
+Happy
+
+![happy](happy_emote.gif)
+
+Sad
+
+![sad](sad_emote.gif)
+
+### Learning
 

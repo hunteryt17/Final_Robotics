@@ -22,12 +22,13 @@ class UserInterface(object):
         # initialize node
         rospy.init_node('robodog_user_interface')
 
-        # print welcome and list of possible commands
+        # print welcome and other information
         print("Welcome! Robodog awaits your command")
         print("Commands include: \n roll \n shake \n come \n follow \n"
         " find [color of dumbbell] \n fetch [color of dumbbell]" 
-        " Color options: red, green, or blue"
-        " Once Robodog has completed your command, please give a reward on a scale of 1 to 10, 10 being amazing")
+        "\nColor options: red, green, or blue"
+        "\n\nOnce Robodog has completed your command, please give a reward on a scale of 1 to 10, 10 being amazing")
+        print("To exit enter \'quit\' as a command")
         
         # initialize
         self.command = UserCommand()
@@ -52,26 +53,21 @@ class UserInterface(object):
         while not rospy.is_shutdown():
             # robot is available to get command
             if not self.busy and not self.action_complete:
+                print("------------------------------------")
                 self.command.command = input("What is your command? \n")
+                # quit
+                if self.command.command == "quit":
+                    rospy.signal_shutdown("Goodbye")
                 
                 # check if command is valid
-                # cmd_list = self.command.command.split()
-
                 # user inputed nothing
-                if not cmd_list:
+                elif not self.command.command:
                     print("Please type a command")
-                elif self.command.command not in cmds:
-                    print("Invalid command, please try again")
 
                 # invalid command
-                # elif cmd_list[0] not in commands:
-                #     print("Could not process \"" + self.command.command + "\", please try again")
-
-                # # invalid find or fetch command
-                # elif cmd_list[0] in ['find','fetch'] and (len(cmd_list) != 2 \
-                #     or cmd_list[1] not in colors):
-                #         print("Invalid color for \"" + cmd_list[0] + "\", please try again")
-                
+                elif self.command.command not in cmds:
+                    print("Invalid command, please try again")
+               
                 # valid command
                 else:   
                     print("Executing command: " + self.command.command)
@@ -88,16 +84,17 @@ class UserInterface(object):
                 while True: 
                     try:
                         self.reward.reward = int(input("How did Robodog do? \n"))
-                        break
+                        
                     except ValueError:
                         print("Invalid reward, please input a number")
-                
-                while True:
-                    if self.reward.reward not in range(1,11):
-                        print("Please enter a reward on a scale of 1 to 10")
-                    else:
+                        continue
+                    
+                    if self.reward.reward in range(1,11):
                         break
-
+                    else:
+                        print("Please enter a reward on a scale of 1 to 10")
+                        
+                
                 print("Reward received")
                 self.reward_pub.publish(self.reward)
                 self.busy = False
