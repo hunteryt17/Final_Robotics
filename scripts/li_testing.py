@@ -13,7 +13,8 @@ class LiTesting(object):
         
         self.command = UserCommand()
         self.reward = Reward()
-        self.action_status = 'idle'
+        self.ActionStatus = ActionStatus()
+        # self.action_status = 'idle'
 
         self.status_pub = rospy.Publisher('/robodog/action_status', ActionStatus, queue_size=10)
 
@@ -23,13 +24,15 @@ class LiTesting(object):
 
     
     def process_command(self, cmd_msg):
-        self.action_status = 'in progress'
-        self.status_pub.publish(self.action_status)
+        self.ActionStatus.status = 'in progress'
+        self.ActionStatus.action = 3
+        self.status_pub.publish(self.ActionStatus)
         self.command = cmd_msg
         # do action
         
-        self.action_status = 'failed'
-        self.status_pub.publish(self.action_status)
+        self.ActionStatus.status = 'failed'
+        self.ActionStatus.action = 7
+        self.status_pub.publish(self.ActionStatus)
         
 
     def get_reward(self, reward_msg):
