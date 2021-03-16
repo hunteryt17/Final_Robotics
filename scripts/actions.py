@@ -29,7 +29,7 @@ class ImageProcessor:
 
         self.image = None
 
-        red = np.uint8([[[0, 255, 255]]])
+        red = np.uint8([[[0, 0, 255]]])
         green = np.uint8([[[0, 255, 0]]])
         blue = np.uint8([[[255, 0, 0]]])
         yellow = np.uint8([[[0, 255, 255]]])
@@ -149,7 +149,7 @@ class RobotControl:
         rate = rospy.Rate(10)
         speed = 0
         max_speed = 1
-        while distance > 0.3 or abs(center) > 10:
+        while distance > 0.4 or abs(center) > 10:
             center = self.image_processor.get_center_for_color(color)
             distance = self.ranges[0]
 
@@ -215,18 +215,26 @@ class RobotControl:
             return Result.FAILURE
 
         rate = rospy.Rate(10)
+
+        # open grip to get dumbbell
+        self.arm_manipulator.open_grip()
         
         while self.ranges[0] > 0.2:
             rate.sleep()
             continue
         
+
+        self.arm_manipulator.close_grip()
+        
         self.set_speed()
         self.arm_manipulator.lift_dumbbell()
 
         # check to see if succesfully lifted dumbbell
-        if self.ranges[0] > 0.3:
+        if min(self.ranges) > 0.3:
+            print("I succeeded")
             return Result.SUCCESS
         else:
+            print("I failed")
             return Result.FAILURE
     
     def fetch(self, color: str) -> Result:
@@ -245,6 +253,7 @@ class RobotControl:
 
         # go to person
         if self.go_to("yellow") is Result.FAILURE:
+            self.place_dumbbell()
             return Result.FAILURE
         
         # place dumbbell
@@ -276,8 +285,9 @@ class RobotControl:
     
     def place_dumbbell(self) -> Result:
         """puts dumbbell on ground & move away"""
+        self.set_speed()
         # place dumbbell on ground
-        self.arm_manipulator.open_grip()
+        self.arm_manipulator.close_grip()
         self.arm_manipulator.reset_arm_position()
 
         # reverse away from dumbbell
@@ -311,7 +321,8 @@ class RobotControl:
         
 
     def run(self):
-        self.fetch("blue")
+        self.fetch("green")
+        self.fetch("red")
         self.spin()
 
 
@@ -336,6 +347,11 @@ class ArmManipulator:
         self.open_grip()
 
     def open_grip(self):
+        gripper_joint_goal = [.015,.015]
+        self.move_group_gripper.go(gripper_joint_goal, wait=True)
+        self.move_group_gripper.stop()
+
+    def close_grip(self):
         gripper_joint_goal = [.01,.01]
         self.move_group_gripper.go(gripper_joint_goal, wait=True)
         self.move_group_gripper.stop()
