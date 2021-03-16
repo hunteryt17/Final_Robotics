@@ -30,7 +30,7 @@ class ImageProcessor:
 
         self.image = None
 
-        red = np.uint8([[[0, 255, 255]]])
+        red = np.uint8([[[0, 0, 255]]])
         green = np.uint8([[[0, 255, 0]]])
         blue = np.uint8([[[255, 0, 0]]])
         yellow = np.uint8([[[0, 255, 255]]])
@@ -152,7 +152,7 @@ class RobotActions:
         rate = rospy.Rate(10)
         speed = 0
         max_speed = 1
-        while distance > 0.3 or abs(center) > 10:
+        while distance > 0.4 or abs(center) > 10:
             center = self.image_processor.get_center_for_color(color)
             distance = self.ranges[0]
 
@@ -219,15 +219,20 @@ class RobotActions:
 
         rate = rospy.Rate(10)
 
+        # open grip to get dumbbell
+        self.arm_manipulator.open_grip()
+
         while self.ranges[0] > 0.2:
             rate.sleep()
             continue
 
+        self.arm_manipulator.close_grip()
+
         self.set_speed()
         self.arm_manipulator.lift_dumbbell()
 
-        # check to see if successfully lifted dumbbell
-        if self.ranges[0] > 0.3:
+        # check to see if succesfully lifted dumbbell
+        if min(self.ranges) > 0.3:
             return Result.SUCCESS
         else:
             return Result.FAILURE
@@ -248,10 +253,25 @@ class RobotActions:
 
         # go to person
         if self.go_to("yellow") is Result.FAILURE:
+            self.place_dumbbell()
             return Result.FAILURE
 
         # place dumbbell
         self.place_dumbbell()
+
+        return Result.SUCCESS
+
+    def come(self) -> Result:
+        """make bot come to person"""
+        if self.go_to("yellow") is Result.FAILURE:
+            return Result.FAILURE
+
+        return Result.SUCCESS
+
+    def find(self, color: str) -> Result:
+        """ finds dumbbell of specified color and goes to it """
+        if self.go_to(color) is Result.FAILURE:
+            return Result.FAILURE
 
         return Result.SUCCESS
 
@@ -264,8 +284,9 @@ class RobotActions:
 
     def place_dumbbell(self) -> Result:
         """puts dumbbell on ground & move away"""
+        self.set_speed()
         # place dumbbell on ground
-        self.arm_manipulator.open_grip()
+        self.arm_manipulator.close_grip()
         self.arm_manipulator.reset_arm_position()
 
         # reverse away from dumbbell
@@ -318,6 +339,11 @@ class ArmManipulator:
         self.open_grip()
 
     def open_grip(self):
+        gripper_joint_goal = [0.015, 0.015]
+        self.move_group_gripper.go(gripper_joint_goal, wait=True)
+        self.move_group_gripper.stop()
+
+    def close_grip(self):
         gripper_joint_goal = [0.01, 0.01]
         self.move_group_gripper.go(gripper_joint_goal, wait=True)
         self.move_group_gripper.stop()
