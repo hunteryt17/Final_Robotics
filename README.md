@@ -32,13 +32,12 @@ This project is centered around a robotics algorithm for reinforcement learning.
 (implemented in `/scripts/user_interface.py`)
 
 Although this component of the project didn't involve many complicated algorithms or code, it is still a major component. This is how the user will interact with the robot to give it commands and rewards. The structure of the code is based on the following logic:
-* when the script is run, print a welcome message, the possible commands, and reward instructions
-* if the robot is not completing an action or getting a reward, prompt the user to enter a command
-* if the command is valid, publish it to the topic `/robodog/user_cmd`; otherwise, print an error message and prompt again until command is valid
-* once the action is complete, prompt the user for a reward (integar 1-10)
-* if the reward is valid, publish it to the topic `/robodog/action_reward`, then restart the loop; otherewise, print an error message and prompt again until reward is valid
+* when the script is run, print a welcome message, the possible commands, reward instructions, and how to quit (lines 28-34)
+* if the robot is not completing an action or getting a reward, prompt the user to enter a command; if the command is 'quit', shutdown the node (lines 59-65)
+* if the command is valid, publish it to the topic `/robodog/user_cmd`; otherwise, print an error message and prompt again until command is valid (lines 67-82)
+* once the action is complete or failed, prompt the user for a reward (integar 0-10); if the reward is valid, publish it to the topic `/robodog/action_reward`, then restart the loop; otherewise, print an error message and prompt again until reward is valid (lines 84-110)
 
-In order to know if the published action has been completed, the user interface node subscribes to `/robodog/action_complete` which provides information as a boolean indicating if the action has been completed. In addition, the user interface node keeps track of how many times each command has been called (correctly/successfully). That information is published with the same message that contains the user input.
+In order to know if the published action has been completed or failed, the user interface node subscribes to `/robodog/action_status` which provides information about the status of the robot action ('complete', 'in progress', 'failed', or 'idle'), along with the action id it completed/attempted to complete. In addition, the user interface node keeps track of how many times each command has been called (correctly/successfully). That information is published with the same message that contains the user input.
 
 
 

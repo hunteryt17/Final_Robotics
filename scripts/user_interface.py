@@ -8,10 +8,18 @@ from robodog.msg import UserCommand, Reward, ActionStatus
 # ActionStatus.status options are ['complete', 'failed', 'in progress', 'idle']
 
 
-cmds = ['roll','shake','come','follow','find red','find green','find blue', \
-    'fetch red','fetch green','fetch blue']
-
-
+cmds = {
+            0: "fetch red",
+            1: "fetch blue",
+            2: "fetch green",
+            3: "find red",
+            4: "find blue",
+            5: "find green",
+            6: "come",
+            7: "follow",
+            8: "shake",
+            9: "roll",
+        }
 class UserInterface(object):
     def __init__(self):
         # initialize node
@@ -22,17 +30,18 @@ class UserInterface(object):
         print("Commands include: \n roll \n shake \n come \n follow \n"
         " find [color of dumbbell] \n fetch [color of dumbbell]" 
         "\nColor options: red, green, or blue"
-        "\n\nOnce Robodog has completed your command, please give a reward on a scale of 1 to 10, 10 being amazing")
+        "\n\nOnce Robodog has completed your command, please give a reward on a scale of 0 to 10, 10 being amazing")
         print("To exit enter \'quit\' as a command")
         
         # initialize
         self.command = UserCommand()
         self.reward = Reward()
-        self.counts = dict.fromkeys(cmds, 0)
+        self.counts = dict.fromkeys(cmds.values(), 0)
 
         # booleans to determine state of robodog 
         self.busy = False
         self.action_status = 'idle'
+        self.action_completed = 0
         
         # set up publishers and subscribers
         self.cmd_pub = rospy.Publisher('/robodog/user_cmd', UserCommand, queue_size=10)
@@ -43,6 +52,7 @@ class UserInterface(object):
         
     def get_action_status(self, status_msg):
         self.action_status = status_msg.status
+        self.action_completed = status_msg.action
         
     def run(self):
         while not rospy.is_shutdown():
@@ -60,7 +70,7 @@ class UserInterface(object):
                     print("Please type a command")
 
                 # invalid command
-                elif self.command.command not in cmds:
+                elif self.command.command not in cmds.values():
                     print("Invalid command, please try again")
                
                 # valid command
@@ -76,8 +86,9 @@ class UserInterface(object):
                 if self.action_status == 'failed':
                     print("Oops! Something went wrong...")
                     print("Still please give Robodog a reward")
+                    print("Action attempted:  " + cmds[self.action_completed])
                 else:
-                    print("Action complete")
+                    print("Action completed:  " + cmds[self.action_completed])
 
                 # make sure user input is valid
                 while True: 
@@ -88,10 +99,10 @@ class UserInterface(object):
                         print("Invalid reward, please input a number")
                         continue
                     
-                    if self.reward.reward in range(1,11):
+                    if self.reward.reward in range(0,11):
                         break
                     else:
-                        print("Please enter a reward on a scale of 1 to 10")
+                        print("Please enter a reward on a scale of 0 to 10")
                         
                 print("Reward received")
                 self.reward_pub.publish(self.reward)
