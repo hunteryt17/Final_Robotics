@@ -252,7 +252,20 @@ class RobotControl:
 
         return Result.SUCCESS
 
+    def come(self) -> Result:
+        """make bot come to person"""
+        if self.go_to("yellow") is Result.FAILURE:
+            return Result.FAILURE
+        
+        return Result.SUCCESS
 
+    def find(self, color: str) -> Result:
+        """ finds dumbbell of specified color and goes to it """
+        if self.go_to(color) is Result.FAILURE:
+            return Result.FAILURE
+        
+        return Result.SUCCESS
+    
 
     def shake(self) -> Result:
         """make bot perform shake"""
