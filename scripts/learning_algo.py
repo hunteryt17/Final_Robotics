@@ -1,32 +1,27 @@
 #!/usr/bin/env python3
-
-import rospy
-
-from gazebo_msgs.msg import ModelState, ModelStates
-from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
-from sensor_msgs.msg import LaserScan
-from q_learning_project.msg import QLearningReward
-from std_msgs.msg import Header
-
-from random import shuffle
-from tf.transformations import quaternion_from_euler, euler_from_quaternion
-
-import time
-import math
-import random
-import numpy as np
-from robodog.msg import UserCommand, Reward, ActionStatus, Action, LearningMatrix, LearningMatrixRow
-from numpy.random import random_sample 
 from copy import deepcopy
+
+import numpy as np
+import rospy
+from numpy.random import random_sample
+from robodog.msg import (
+    Action,
+    ActionStatus,
+    LearningMatrix,
+    LearningMatrixRow,
+    Reward,
+    UserCommand,
+)
 
 # commands = ['roll','shake','come','follow','find','fetch']
 # colors = ['red','green','blue']
 
+
 def draw_random_action(choices, probabilities):
-    episilon = [0.9,0.1]
-    random = np.random.choice([True, False], p= episilon)
+    epsilon = [0.9, 0.1]
+    choice = np.random.choice([True, False], p=epsilon)
     # randomly select action
-    if not random:
+    if not choice:
         return np.random.choice(10)
 
     # Use Q Matrix to select new action
@@ -44,17 +39,22 @@ def draw_random_action(choices, probabilities):
 
 
 class LearningAlgo(object):
-
     def __init__(self):
         self.initialized = False
         print("Initializing Learning Algo...")
 
-        rospy.init_node('learning_algo') 
-        rospy.Subscriber('/robodog/user_cmd', UserCommand, self.get_command)
-        rospy.Subscriber('/robodog/action_reward', Reward, self.get_reward)
-        self.action_pub = rospy.Publisher('robodog/action', Action, queue_size=10)
-        self.matrix_pub = rospy.Publisher('robodog/learning_matrix', LearningMatrix, queue_size=10)
-        rospy.Subscriber('/robodo/action_status', ActionStatus,self.get_status)
+        rospy.init_node("learning_algo")
+        rospy.Subscriber("/robodog/user_cmd", UserCommand, self.get_command)
+        rospy.Subscriber("/robodog/action_reward", Reward, self.get_reward)
+        self.action_pub = rospy.Publisher(
+            "robodog/action", Action, queue_size=10
+        )
+        self.matrix_pub = rospy.Publisher(
+            "robodog/learning_matrix", LearningMatrix, queue_size=10
+        )
+        rospy.Subscriber(
+            "/robodog/action_status", ActionStatus, self.get_status
+        )
         self.action_status = "Idle"
         self.command = None
         self.selected_action = None
@@ -69,11 +69,10 @@ class LearningAlgo(object):
         for _ in range(10):
             x = LearningMatrixRow()
             for _ in range(10):
-                x.matrix_row.append(1/10.0)
+                x.matrix_row.append(1 / 10.0)
             self.q_matrix.matrix.append(x)
 
         self.matrix_pub.publish(self.q_matrix)
-
 
     def get_status(self, data):
         self.action_status = data.status
@@ -81,7 +80,7 @@ class LearningAlgo(object):
     def get_reward(self, data):
         if not self.initialized:
             return
-        self.reward = data.reward 
+        self.reward = data.reward
         # print(self.action_status)
         if self.reward:
             # print("Received Reward")
@@ -93,24 +92,30 @@ class LearningAlgo(object):
         gamma = 0.5
 
         # get value
-        current_val = self.q_matrix.matrix[self.processed_action].matrix_row[self.selected_action]
-        
+        current_val = self.q_matrix.matrix[self.processed_action].matrix_row[
+            self.selected_action
+        ]
+
         # get max value of all actions for state2
-        max_action = max(self.q_matrix.matrix[self.processed_action].matrix_row)
+        max_action = max(
+            self.q_matrix.matrix[self.processed_action].matrix_row
+        )
 
         # update q matrix for state1 & action_t
-        self.q_matrix.matrix[self.processed_action].matrix_row[self.selected_action]  += \
-            int(alpha * (self.reward/10.0 + gamma * max_action  - current_val))
+        self.q_matrix.matrix[self.processed_action].matrix_row[
+            self.selected_action
+        ] += int(
+            alpha * (self.reward / 10.0 + gamma * max_action - current_val)
+        )
         print("Updating Action Matrix")
         print(self.q_matrix)
         self.matrix_pub.publish(self.q_matrix)
- 
 
     def get_command(self, data):
         if not self.initialized:
             return
         self.command = data.command
-        
+
         self.select_action()
 
     def process_command(self):
@@ -127,7 +132,7 @@ class LearningAlgo(object):
             "come": 6,
             "follow": 7,
             "shake": 8,
-            "roll": 9
+            "roll": 9,
         }
         command_lowered = command.lower()
         action = None
@@ -137,22 +142,27 @@ class LearningAlgo(object):
                 if comm_parsed[0] in command_lowered:
                     action = commands[comm]
             else:
-                if comm_parsed[0] in command_lowered and comm_parsed[1] in command_lowered:
+                if (
+                    comm_parsed[0] in command_lowered
+                    and comm_parsed[1] in command_lowered
+                ):
                     action = commands[comm]
         return action
 
-
     def select_action(self):
         if not self.initialized:
-            return 
-        
-        # Subscribe to topic that sends the processed command and convert command to numeric
+            return
+
+        # Subscribe to topic that sends the processed command and convert
+        # command to numeric
         self.processed_action = self.process_command()
         print(self.processed_action)
         # Select an action using the action probability matrix
-        actions = [i for i in range(10)]
-        self.selected_action = draw_random_action(actions, self.q_matrix.matrix[self.processed_action].matrix_row)
-        
+        actions = list(range(10))
+        self.selected_action = draw_random_action(
+            actions, self.q_matrix.matrix[self.processed_action].matrix_row
+        )
+
         # Publish the action
         action = Action()
         action.action = self.selected_action
@@ -160,12 +170,11 @@ class LearningAlgo(object):
         print(self.selected_action)
         print("action complete\n")
 
-
     def run(self):
         while not rospy.is_shutdown():
             rospy.spin()
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     node = LearningAlgo()
     node.run()
-

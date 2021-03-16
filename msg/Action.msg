@@ -1,2 +1,2 @@
 Header header
-string action
+int16 action
