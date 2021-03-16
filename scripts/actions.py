@@ -12,8 +12,6 @@ from sensor_msgs.msg import Image, LaserScan
 import moveit_commander
 import math
 
-# from robodog.msg import ActionStatus
-
 
 @enum.unique
 class Result(enum.Enum):
@@ -100,11 +98,6 @@ class RobotActions:
         self.speed_pub = rospy.Publisher("/cmd_vel", Twist, queue_size=10)
         self.odom_subs = rospy.Subscriber("/odom", Odometry, self.process_odom)
         self.scan_sub = rospy.Subscriber("scan", LaserScan, self.process_scan)
-        # self.action_status_pub = rospy.Publisher(
-        #     "/robodog/action_status", ActionStatus, queue_size=10
-        # )
-
-    # self.action_status = ActionStatus()
 
     def process_odom(self, data: Odometry):
         self.odom = data
@@ -231,7 +224,7 @@ class RobotActions:
         self.set_speed()
         self.arm_manipulator.lift_dumbbell()
 
-        # check to see if succesfully lifted dumbbell
+        # check to see if successfully lifted dumbbell
         if min(self.ranges) > 0.3:
             return Result.SUCCESS
         else:
@@ -258,20 +251,6 @@ class RobotActions:
 
         # place dumbbell
         self.place_dumbbell()
-
-        return Result.SUCCESS
-
-    def come(self) -> Result:
-        """make bot come to person"""
-        if self.go_to("yellow") is Result.FAILURE:
-            return Result.FAILURE
-
-        return Result.SUCCESS
-
-    def find(self, color: str) -> Result:
-        """ finds dumbbell of specified color and goes to it """
-        if self.go_to(color) is Result.FAILURE:
-            return Result.FAILURE
 
         return Result.SUCCESS
 
