@@ -1,21 +1,16 @@
 #!/usr/bin/env python3
 
-'''
-variables:
-- self.busy: boolean to indicate whether the program is ready to take a command
-- self.action_complete: boolean to indicate if action is complete; subscribes
-  to robodog/action_status which shld be published to by action execution node
-
-'''
 
 import rospy
 
 from robodog.msg import UserCommand, Reward, ActionStatus
 
-commands = ['roll','shake','come','follow','find','fetch']
-colors = ['red','green','blue']
+# ActionStatus.status options are ['complete', 'failed', 'in progress', 'idle']
+
+
 cmds = ['roll','shake','come','follow','find red','find green','find blue', \
     'fetch red','fetch green','fetch blue']
+
 
 class UserInterface(object):
     def __init__(self):
@@ -37,7 +32,7 @@ class UserInterface(object):
 
         # booleans to determine state of robodog 
         self.busy = False
-        self.action_complete = False
+        self.action_status = 'idle'
         
         # set up publishers and subscribers
         self.cmd_pub = rospy.Publisher('/robodog/user_cmd', UserCommand, queue_size=10)
@@ -47,12 +42,12 @@ class UserInterface(object):
 
         
     def get_action_status(self, status_msg):
-        self.action_complete = status_msg.complete
+        self.action_status = status_msg.status
         
     def run(self):
         while not rospy.is_shutdown():
             # robot is available to get command
-            if not self.busy and not self.action_complete:
+            if not self.busy and self.action_status == 'idle':
                 print("------------------------------------")
                 self.command.command = input("What is your command? \n")
                 # quit
@@ -77,8 +72,12 @@ class UserInterface(object):
                     self.counts[self.command.command] += 1
 
             # robot completed action and needs a reward
-            elif self.action_complete:
-                print("Action complete")
+            elif self.action_status == 'complete' or self.action_status == 'failed':
+                if self.action_status == 'failed':
+                    print("Oops! Something went wrong...")
+                    print("Still please give Robodog a reward")
+                else:
+                    print("Action complete")
 
                 # make sure user input is valid
                 while True: 
@@ -94,11 +93,10 @@ class UserInterface(object):
                     else:
                         print("Please enter a reward on a scale of 1 to 10")
                         
-                
                 print("Reward received")
                 self.reward_pub.publish(self.reward)
                 self.busy = False
-                self.action_complete = False
+                self.action_status = 'idle'
 
         
 
