@@ -10,7 +10,6 @@ from std_msgs.msg import Header
 
 from random import shuffle
 from tf.transformations import quaternion_from_euler, euler_from_quaternion
-from q_learning_project.msg import RobotMoveDBToBlock, QMatrix, QLearningReward, QMatrixRow 
 
 import time
 import math
@@ -27,6 +26,15 @@ def draw_random_action(choices, probabilities):
         choices: the values to sample from represented as a list
         probabilities: the probability of selecting each element in choices represented as a list
     """
+    episilon = [0.9,0.1]
+    random = np.random.choice([True, False], episilon)
+    # randomly select action
+    if random:
+        return np.random.choice([choices])
+
+    # Use Q Matrix to select new action
+    for p in probabilities:
+        p += 1
     values = np.array(range(len(choices)))
     probs = np.array(probabilities)
     bins = np.add.accumulate(probs)
@@ -63,6 +71,7 @@ class LearningAlgo(object):
     def update_action_probs(self):
         alpha = 1
         gamma = 0.5
+        # epsilon = 0.9
 
         # get value
         current_val = self.action_matrix[self.command][self.curr_action]
@@ -74,13 +83,15 @@ class LearningAlgo(object):
         self.action_matrix[self.command][self.curr_action]  += \
             int(alpha * (self.reward.reward + gamma * max_action  - current_val))
         
-        # Normalize probabilities
-        prob_sum = 0.0
-        for prob in self.action_matrix[self.command]:
-            prob_sum += prob
 
-        for i in range(10):
-            self.action_matrix[self.command][i] =  self.action_matrix[self.command][i]/prob_sum
+        # Normalize probabilities
+        # prob_sum = 0.0
+        # for prob in self.action_matrix[self.command]:
+        #     prob_sum += prob
+
+        # for i in range(10):
+        #     self.action_matrix[self.command][i] =  self.action_matrix[self.command][i]/prob_sum
+
 
     def get_command(self, data):
         if not self.initialized:
@@ -126,7 +137,9 @@ class LearningAlgo(object):
         actions = [i for i in range(10)]
         self.curr_action = draw_random_action(actions, self.action_matrix[given_action])
         # Publish the action
-        self.action_pub.publish(self.curr_action)
+        action = Action()
+        action.action = self.curr_action
+        self.action_pub.publish(action)
 
     
     def initialized_action_probability_matrix(self):
@@ -140,29 +153,9 @@ class LearningAlgo(object):
         # Set action probability
         for s1 in state_space:
             for s2 in state_space:
-                self.action_matrix[s1][s2] = self.get_initial_action_probability(s1,s2)
+                self.action_matrix[s1][s2] = 1/10
                 return
 
-    def get_initial_action_probability(self, s1, s2):
-        all_actions ={
-            "fetch_actions" : [0,1,2],
-            "find_actions" : [3,4,5],
-            "person_actions" : [6,7],
-            "in_place_actions" : [8,9]
-        }
-    
-        total_actions = float(len(all_actions["fetch_actions"]) + 
-            len(all_actions["find_actions"]) + len(all_actions["person_actions"]) + 
-            len(all_actions["in_place_actions"]))
-        prob = 1
-        for action_category in all_actions:
-            if s1 in action_category:
-                denominator = total_actions + (len(action_category) -1)(len(fetch_actions))
-                if s2 in action_category:
-                    prob = action_category/denominator
-                else:
-                    prob = 1/denominator
-                return prob 
 
     def run(self):
         while not rospy.is_shutdown():
