@@ -1,1 +1,1 @@
-bool complete
+string status

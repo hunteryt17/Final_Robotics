@@ -53,6 +53,9 @@ add_message_files(
     UserCommand.msg
     Reward.msg
     ActionStatus.msg
+    Action.msg
+    LearningMatrix.msg
+    LearningMatrixRow.msg
 )
 
 ## Generate services in the 'srv' folder
