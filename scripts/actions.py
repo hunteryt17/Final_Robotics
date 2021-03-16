@@ -9,7 +9,6 @@ from cv2 import cv2
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Image, LaserScan
-from tf.transformations import euler_from_quaternion
 
 
 @enum.unique
