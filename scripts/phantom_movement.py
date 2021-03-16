@@ -64,14 +64,17 @@ class PhantomDogMovement(object):
             command = UserCommand()
             command.command = robot_command_to_take
             self.command_pub.publish(command)
-            while not self.action_status:
-                print("waiting for action completion")
+    
+            # while not self.action_status:
+            #     print("waiting for action completion")
 
             # Give arbitary reward
             reward = random.uniform(0, 1)
             self.reward_pub.publish(reward)
             # reset the flag and the action in the queue
             self.actions_seq.pop(0)
+
+            self.execute_robot_action()
 
 
     def get_action_status(self, data):
