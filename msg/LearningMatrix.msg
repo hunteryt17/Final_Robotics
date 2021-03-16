@@ -1,1 +1,2 @@
-float32[] matrix
+Header header
+LearningMatrixRow[] matrix

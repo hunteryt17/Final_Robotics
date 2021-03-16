@@ -15,7 +15,7 @@ import time
 import math
 import random
 import numpy as np
-from robodog.msg import UserCommand, Reward, ActionStatus, Action, LearningMatrix
+from robodog.msg import UserCommand, Reward, ActionStatus, Action, LearningMatrix, LearningMatrixRow
 from numpy.random import random_sample 
 from copy import deepcopy
 
@@ -23,10 +23,6 @@ from copy import deepcopy
 # colors = ['red','green','blue']
 
 def draw_random_action(choices, probabilities):
-    """ Return a random action from the set choices with the specified probabilities
-        choices: the values to sample from represented as a list
-        probabilities: the probability of selecting each element in choices represented as a list
-    """
     episilon = [0.9,0.1]
     random = np.random.choice([True, False], p= episilon)
     # randomly select action
@@ -39,9 +35,6 @@ def draw_random_action(choices, probabilities):
     values = np.array(range(len(choices)))
     probs = np.array(probabilities)
     bins = np.add.accumulate(probs)
-    print(values)
-    print(probs)
-    print(bins)
     inds = values[np.digitize(random_sample(10), bins)]
     samples = []
     for i in inds:
@@ -67,21 +60,30 @@ class LearningAlgo(object):
         self.selected_action = None
         self.reward = None
         self.processed_action = None
-
-        self.action_matrix = [[] for x in range(10)]
-        for i in range(10):
-            self.action_matrix[i] = [1/10 for x in range(10)]
-        self.matrix_pub.publish(self.action_matrix)
+        self.q_matrix = LearningMatrix()
+        self.initialize_matrix()
 
         self.initialized = True
+
+    def initialize_matrix(self):
+        for _ in range(10):
+            x = LearningMatrixRow()
+            for _ in range(10):
+                x.matrix_row.append(1/10.0)
+            self.q_matrix.matrix.append(x)
+
+        self.matrix_pub.publish(self.q_matrix)
+
 
     def get_status(self, data):
         self.action_status = data.status
 
     def get_reward(self, data):
+        if not self.initialized:
+            return
         self.reward = data.reward 
         # print(self.action_status)
-        if self.reward and self.action_status == "Complete":
+        if self.reward:
             # print("Received Reward")
             # print(self.reward)
             self.update_action_probs()
@@ -91,19 +93,17 @@ class LearningAlgo(object):
         gamma = 0.5
 
         # get value
-        current_val = self.action_matrix[self.processed_action][self.selected_action]
+        current_val = self.q_matrix.matrix[self.processed_action].matrix_row[self.selected_action]
         
         # get max value of all actions for state2
-        max_action = max(self.action_matrix[self.processed_action])
+        max_action = max(self.q_matrix.matrix[self.processed_action].matrix_row)
 
         # update q matrix for state1 & action_t
-        self.action_matrix[self.processed_action][self.selected_action]  += \
+        self.q_matrix.matrix[self.processed_action].matrix_row[self.selected_action]  += \
             int(alpha * (self.reward/10.0 + gamma * max_action  - current_val))
         print("Updating Action Matrix")
-        print(self.action_matrix)
-        matrix = LearningMatrix()
-        matrix.matrix = self.action_matrix
-        self.matrix_pub.publish(matrix)
+        print(self.q_matrix)
+        self.matrix_pub.publish(self.q_matrix)
  
 
     def get_command(self, data):
@@ -114,6 +114,8 @@ class LearningAlgo(object):
         self.select_action()
 
     def process_command(self):
+        if not self.initialized:
+            return
         command = self.command
         commands = {
             "fetch red": 0,
@@ -149,7 +151,7 @@ class LearningAlgo(object):
         print(self.processed_action)
         # Select an action using the action probability matrix
         actions = [i for i in range(10)]
-        self.selected_action = draw_random_action(actions, self.action_matrix[self.processed_action])
+        self.selected_action = draw_random_action(actions, self.q_matrix.matrix[self.processed_action].matrix_row)
         
         # Publish the action
         action = Action()
