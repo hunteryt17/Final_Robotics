@@ -104,14 +104,14 @@
         <visual name='visual'>
           <geometry>
             <mesh>
-              <uri>model://q_learning_project/gazebo_custom_meshes/robot_dumbbell_red.dae</uri>
+              <uri>model://Final_Robotics/gazebo_custom_meshes/robot_dumbbell_red.dae</uri>
             </mesh>
           </geometry>
         </visual>
         <collision name='collision'>
           <geometry>
             <mesh>
-              <uri>model://q_learning_project/gazebo_custom_meshes/robot_dumbbell_red.dae</uri>
+              <uri>model://Final_Robotics/gazebo_custom_meshes/robot_dumbbell_red.dae</uri>
             </mesh>
           </geometry>
           <surface>
@@ -151,14 +151,14 @@
         <visual name='visual'>
           <geometry>
             <mesh>
-              <uri>model://q_learning_project/gazebo_custom_meshes/robot_dumbbell_blue.dae</uri>
+              <uri>model://Final_Robotics/gazebo_custom_meshes/robot_dumbbell_blue.dae</uri>
             </mesh>
           </geometry>
         </visual>
         <collision name='collision'>
           <geometry>
             <mesh>
-              <uri>model://q_learning_project/gazebo_custom_meshes/robot_dumbbell_blue.dae</uri>
+              <uri>model://Final_Robotics/gazebo_custom_meshes/robot_dumbbell_blue.dae</uri>
             </mesh>
           </geometry>
           <surface>
@@ -198,14 +198,14 @@
         <visual name='visual'>
           <geometry>
             <mesh>
-              <uri>model://q_learning_project/gazebo_custom_meshes/robot_dumbbell_green.dae</uri>
+              <uri>model://Final_Robotics/gazebo_custom_meshes/robot_dumbbell_green.dae</uri>
             </mesh>
           </geometry>
         </visual>
         <collision name='collision'>
           <geometry>
             <mesh>
-              <uri>model://q_learning_project/gazebo_custom_meshes/robot_dumbbell_green.dae</uri>
+              <uri>model://Final_Robotics/gazebo_custom_meshes/robot_dumbbell_green.dae</uri>
             </mesh>
           </geometry>
           <surface>

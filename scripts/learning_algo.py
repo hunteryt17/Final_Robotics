@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-from copy import deepcopy
-
 import numpy as np
 import rospy
 from numpy.random import random_sample
@@ -31,11 +29,7 @@ def draw_random_action(choices, probabilities):
     probs = np.array(probabilities)
     bins = np.add.accumulate(probs)
     inds = values[np.digitize(random_sample(10), bins)]
-    samples = []
-    for i in inds:
-        samples.append(deepcopy(choices[int(i)]))
-    action = samples[0]
-    return action
+    return choices[int(inds[0])]
 
 
 class LearningAlgo(object):

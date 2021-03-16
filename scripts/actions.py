@@ -9,10 +9,11 @@ from cv2 import cv2
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Image, LaserScan
-from tf.transformations import euler_from_quaternion
 import moveit_commander
 import math
-#from robodog.msg import ActionStatus
+
+# from robodog.msg import ActionStatus
+
 
 @enum.unique
 class Result(enum.Enum):
@@ -100,8 +101,11 @@ class RobotControl:
         self.speed_pub = rospy.Publisher("/cmd_vel", Twist, queue_size=10)
         self.odom_subs = rospy.Subscriber("/odom", Odometry, self.process_odom)
         self.scan_sub = rospy.Subscriber("scan", LaserScan, self.process_scan)
-        #self.action_status_pub = rospy.Publisher("/robodog/action_status", ActionStatus, queue_size=10)
-       # self.action_status = ActionStatus()
+        # self.action_status_pub = rospy.Publisher(
+        #     "/robodog/action_status", ActionStatus, queue_size=10
+        # )
+
+    # self.action_status = ActionStatus()
 
     def process_odom(self, data: Odometry):
         self.odom = data
@@ -159,7 +163,7 @@ class RobotControl:
             rate.sleep()
 
         return Result.SUCCESS
-    
+
     def follow(self, color: str) -> Result:
         if self.turn_to(color) is Result.FAILURE:
             print(f"Could not find {color}")
@@ -200,11 +204,11 @@ class RobotControl:
             rate.sleep()
 
         return Result.SUCCESS
-    
-    def pick_up_dumbbell(self, color:str) -> Result:
+
+    def pick_up_dumbbell(self, color: str) -> Result:
         """
         Goes to dumbbell and picks it up
-        
+
         Parameters:
             color: string of desired color to be picked up
         Returns:
@@ -215,38 +219,38 @@ class RobotControl:
             return Result.FAILURE
 
         rate = rospy.Rate(10)
-        
+
         while self.ranges[0] > 0.2:
             rate.sleep()
             continue
-        
+
         self.set_speed()
         self.arm_manipulator.lift_dumbbell()
 
-        # check to see if succesfully lifted dumbbell
+        # check to see if successfully lifted dumbbell
         if self.ranges[0] > 0.3:
             return Result.SUCCESS
         else:
             return Result.FAILURE
-    
+
     def fetch(self, color: str) -> Result:
         """
         Goes to dumbbell, picks it up, returns to person
-        
+
         Parameters:
             color: string of desired color to be picked up
         Returns:
             Result enum type of FAILURE or SUCCESS
         """
 
-        #pick up dumbbell
+        # pick up dumbbell
         if self.pick_up_dumbbell(color) is Result.FAILURE:
             return Result.FAILURE
 
         # go to person
         if self.go_to("yellow") is Result.FAILURE:
             return Result.FAILURE
-        
+
         # place dumbbell
         self.place_dumbbell()
 
@@ -266,14 +270,13 @@ class RobotControl:
         
         return Result.SUCCESS
     
-
     def shake(self) -> Result:
         """make bot perform shake"""
         self.arm_manipulator.shake()
-        #self.action_status.complete = True
-        #self.action_status_pub.publish(self.action_status)
+        # self.action_status.complete = True
+        # self.action_status_pub.publish(self.action_status)
         return Result.SUCCESS
-    
+
     def place_dumbbell(self) -> Result:
         """puts dumbbell on ground & move away"""
         # place dumbbell on ground
@@ -289,26 +292,23 @@ class RobotControl:
 
         return Result.SUCCESS
 
-
-    
     def spin(self) -> Result:
         """ robot spins in a circle """
         turn_distance = 0
         speed = 0.5
         rate = rospy.Rate(10)
 
-        #make bot spin 360 deg
+        # make bot spin 360 deg
         while abs(turn_distance) < np.pi * 2:
             turn_distance += speed / 10
             self.set_speed(angular_z=speed)
             rate.sleep()
-        
-        #stop spinning
+
+        # stop spinning
         self.set_speed()
-        #self.action_status.complete = True
-        #self.action_status_pub.publish(self.action_status)
+        # self.action_status.complete = True
+        # self.action_status_pub.publish(self.action_status)
         return Result.SUCCESS
-        
 
     def run(self):
         self.fetch("blue")
@@ -323,11 +323,12 @@ class ArmManipulator:
 
         # the interface to the group of joints making up the turtlebot3
         # openmanipulator gripper
-        self.move_group_gripper = moveit_commander.MoveGroupCommander("gripper")
+        self.move_group_gripper = moveit_commander.MoveGroupCommander(
+            "gripper"
+        )
 
         # Position the arm
         self.reset_arm_position()
-    
 
     def reset_arm_position(self):
         arm_joint_goal = [0.0, 0.4, 0.5, -0.9]
@@ -336,10 +337,10 @@ class ArmManipulator:
         self.open_grip()
 
     def open_grip(self):
-        gripper_joint_goal = [.01,.01]
+        gripper_joint_goal = [0.01, 0.01]
         self.move_group_gripper.go(gripper_joint_goal, wait=True)
         self.move_group_gripper.stop()
-    
+
     def sad_emote(self):
         """complete sad emote for bot"""
         arm_joint_goal = [1, 0.5, -0.5, 1.0]
@@ -353,7 +354,7 @@ class ArmManipulator:
         self.move_group_arm.go(arm_joint_goal, wait=True)
         self.move_group_arm.stop()
         self.reset_arm_position()
-    
+
     def shake(self):
         """complete shake action for bot"""
         arm_joint_goal = [0, 0.5, -0.2, -0.2]
@@ -365,20 +366,21 @@ class ArmManipulator:
         self.reset_arm_position()
 
     def pick_up_position(self):
-        arm_joint_goal = [0,.4,.5,-.9]
+        arm_joint_goal = [0, 0.4, 0.5, -0.9]
         self.move_group_arm.go(arm_joint_goal, wait=True)
         self.move_group_arm.stop()
         self.open_grip()
 
     def lift_dumbbell(self):
         """ move arm to lifted position"""
-        arm_joint_goal = [0,
+        arm_joint_goal = [
+            0,
             math.radians(0.0),
             math.radians(-20),
-            math.radians(-20)]
+            math.radians(-20),
+        ]
         self.move_group_arm.go(arm_joint_goal, wait=True)
         self.move_group_arm.stop()
-    
 
 
 if __name__ == "__main__":
