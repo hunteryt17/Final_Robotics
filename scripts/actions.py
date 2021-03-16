@@ -90,9 +90,8 @@ class ImageProcessor:
         return float("inf")
 
 
-class RobotControl:
+class RobotActions:
     def __init__(self):
-        rospy.init_node("robodog")
         self.odom = None
         self.ranges = None
         self.image_processor = ImageProcessor()
@@ -296,10 +295,6 @@ class RobotControl:
         # self.action_status_pub.publish(self.action_status)
         return Result.SUCCESS
 
-    def run(self):
-        self.fetch("blue")
-        self.spin()
-
 
 class ArmManipulator:
     def __init__(self):
@@ -367,7 +362,3 @@ class ArmManipulator:
         ]
         self.move_group_arm.go(arm_joint_goal, wait=True)
         self.move_group_arm.stop()
-
-
-if __name__ == "__main__":
-    RobotControl().run()

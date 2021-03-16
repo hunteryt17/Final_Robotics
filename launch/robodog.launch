@@ -1,7 +1,7 @@
 <launch>
   <arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [waffle, waffle_pi]"/>
   <arg name="gui" default="true"/>
-  <arg name="paused" default="true"/>
+  <arg name="paused" default="false"/>
   <arg name="use_sim_time" default="true"/>
 
   <rosparam file="$(find turtlebot3_manipulation_gazebo)/config/gazebo_controller.yaml" command="load"/>
@@ -16,6 +16,9 @@
     <arg name="debug" value="false"/>
   </include>
 
+  <include file="$(find turtlebot3_manipulation_moveit_config)/launch/move_group.launch">
+  </include>
+
   <!-- send robot urdf to param server -->
   <include file="$(find turtlebot3_manipulation_description)/launch/turtlebot3_manipulation_upload.launch">
     <arg name="model" value="$(arg model)"/>
@@ -24,6 +27,13 @@
   <!-- push robot_description to factory and spawn robot in gazebo -->
   <node name="spawn_gazebo_model" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
     args="-urdf -param robot_description -model robot -x 0.0 -y 0.0 -Y 0.0 -J joint1 0.0 -J joint2 0.0 -J joint3 0.0 -J joint4 0.0 -J gripper 0.0 -J gripper_sub 0.0"/>
+
+
+  <!-- launch learning algo node-->
+  <node name="learning_algo" pkg="robodog" type="learning_algo.py"/>
+
+   <!-- launch controller node-->
+  <node name="robodog_controller" pkg="robodog" type="controller.py" required="true"/>
 
   <!-- controller utils -->
   <include file="$(find turtlebot3_manipulation_gazebo)/launch/controller_utils.launch"/>
