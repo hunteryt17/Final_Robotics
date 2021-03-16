@@ -54,6 +54,7 @@ add_message_files(
     Reward.msg
     ActionStatus.msg
     Action.msg
+    LearningMatrix.msg
 )
 
 ## Generate services in the 'srv' folder
