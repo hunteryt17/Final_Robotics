@@ -82,6 +82,7 @@ class RobotActions:
 
             linear = min(speed + 0.05, max_speed, distance * 0.1)
             angular = -center * 0.01
+
             self.set_speed(linear_x=linear, angular_z=angular)
             rate.sleep()
         self.set_speed()
@@ -157,6 +158,8 @@ class RobotActions:
         # check to see if successfully lifted dumbbell
         if min(self.ranges) > 0.3:
             return Result.SUCCESS
+        elif self.image_processor.get_y_center_for_color(color) > -50:
+            self.pick_up_dumbbell(color)
         else:
             return Result.FAILURE
 
