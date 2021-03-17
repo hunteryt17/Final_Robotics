@@ -14,8 +14,8 @@ class RobotController:
             1: (lambda: self.robot_actions.fetch("blue")),
             2: (lambda: self.robot_actions.fetch("green")),
             3: (lambda: self.robot_actions.go_to("red")),
-            4: (lambda: self.robot_actions.go_to("green")),
-            5: (lambda: self.robot_actions.go_to("blue")),
+            4: (lambda: self.robot_actions.go_to("blue")),
+            5: (lambda: self.robot_actions.go_to("green")),
             6: (lambda: self.robot_actions.go_to("yellow")),
             7: (lambda: self.robot_actions.follow("yellow")),
             8: (lambda: self.robot_actions.shake()),
@@ -35,12 +35,12 @@ class RobotController:
         result = self.num_action_map[action.action]()
         if result is actions.Result.FAILURE:
             self.action_status_publisher.publish(
-                ActionStatus(status="complete", action=action.action)
+                ActionStatus(status="failed", action=action.action)
             )
 
         else:
             self.action_status_publisher.publish(
-                ActionStatus(status="failed", action=action.action)
+                ActionStatus(status="complete", action=action.action)
             )
 
     def run(self):

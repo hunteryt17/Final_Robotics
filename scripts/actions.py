@@ -147,7 +147,7 @@ class RobotActions:
 
         # keep moving until it reaches dumbbell
         linear = min(0.05, distance * 0.1)
-        self.set_speed(linear_x= linear)
+        self.set_speed(linear_x=linear)
 
         # open grip to get dumbbell
         self.arm_manipulator.open_grip()
@@ -162,7 +162,7 @@ class RobotActions:
         self.arm_manipulator.lift_dumbbell()
 
         # check to see if successfully lifted dumbbell
-        if min(self.ranges) > 0.3:
+        if self.image_processor.get_y_center_for_color(color) == float("inf"):
             return Result.SUCCESS
         elif self.image_processor.get_y_center_for_color(color) > -50:
             self.pick_up_dumbbell(color)
@@ -233,6 +233,7 @@ class RobotActions:
         # self.action_status.complete = True
         # self.action_status_pub.publish(self.action_status)
         return Result.SUCCESS
+
 
 class ArmManipulator:
     def __init__(self):
