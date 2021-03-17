@@ -84,7 +84,7 @@ class RobotActions:
             angular = -center * 0.01
             self.set_speed(linear_x=linear, angular_z=angular)
             rate.sleep()
-
+        self.set_speed()
         return Result.SUCCESS
 
     def follow(self, color: str) -> Result:
@@ -125,7 +125,6 @@ class RobotActions:
             else:
                 current_time = time.time()
             rate.sleep()
-
         return Result.SUCCESS
 
     def pick_up_dumbbell(self, color: str) -> Result:
