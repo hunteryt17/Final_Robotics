@@ -142,6 +142,12 @@ class RobotActions:
 
         rate = rospy.Rate(10)
 
+        distance = self.ranges[0]
+
+        # keep moving until it reaches dumbbell
+        linear = min(0.05, distance * 0.1)
+        self.set_speed(linear_x= linear)
+
         # open grip to get dumbbell
         self.arm_manipulator.open_grip()
 
@@ -224,7 +230,6 @@ class RobotActions:
         # self.action_status.complete = True
         # self.action_status_pub.publish(self.action_status)
         return Result.SUCCESS
-
 
 class ArmManipulator:
     def __init__(self):
