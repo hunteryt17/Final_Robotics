@@ -27,9 +27,9 @@ def draw_random_action(choices, probabilities):
     for p in range(len(probabilities)):
         probabilities[p] += 1
         probability_sum += probabilities[p]
-    
+
     for p in range(len(probabilities)):
-        probabilities[p] =  probabilities[p] /probability_sum
+        probabilities[p] = probabilities[p] / probability_sum
 
     values = np.array(range(len(choices)))
     probs = np.array(probabilities)
@@ -84,23 +84,24 @@ class LearningAlgo(object):
 
         self.reward = data.reward
         self.update_action_probs()
-        
 
     def update_action_probs(self):
-        
+
         if not self.initialized:
             return
 
         alpha = 1
         gamma = 0.5
-        
+
         current_val = self.q_matrix.matrix[self.processed_action].matrix_row[
             self.selected_action
         ]
         max_action = max(
             self.q_matrix.matrix[self.processed_action].matrix_row
         )
-        change = alpha * ((self.reward / 10.0) + gamma * max_action - current_val)
+        change = alpha * (
+            (self.reward / 10.0) + gamma * max_action - current_val
+        )
         self.q_matrix.matrix[self.processed_action].matrix_row[
             self.selected_action
         ] += change

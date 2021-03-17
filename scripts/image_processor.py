@@ -75,7 +75,7 @@ class ImageProcessor:
         return float("inf")
 
     def get_y_center_for_color(self, color: str) -> float:
-        """Gets the center of the image for the given color.
+        """Gets the y-center of the image for the given color.
 
         Parameters:
             color: one of "red", "green", "blue", or "yellow"
