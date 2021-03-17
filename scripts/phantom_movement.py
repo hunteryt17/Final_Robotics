@@ -80,8 +80,8 @@ class PhantomDogMovement(object):
             "shake",
             "roll"
         ]
-        # return random.choice(actions)
-        return "fetch red"
+        return random.choice(actions)
+        # return "fetch red"
         
     def all_or_nothing_rewarding(self, actual_command, processed_commad):
         commands = {

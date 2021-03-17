@@ -22,11 +22,15 @@ def draw_random_action(choices, probabilities):
     probability_sum = 0.0
     # Use Q Matrix to select new action
     for p in range(len(probabilities)):
-        probabilities[p] += 1
+        # probabilities[p] += 1
         probability_sum += probabilities[p]
 
     for p in range(len(probabilities)):
-        probabilities[p] = probabilities[p] / probability_sum
+        if probability_sum == 0:
+            probabilities[p] = .1
+        else:
+            probabilities[p] = probabilities[p] / probability_sum
+
 
     values = np.array(range(len(choices)))
     probs = np.array(probabilities)
