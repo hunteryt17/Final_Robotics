@@ -11,9 +11,6 @@ from robodog.msg import (
     UserCommand,
 )
 
-# commands = ['roll','shake','come','follow','find','fetch']
-# colors = ['red','green','blue']
-
 
 def draw_random_action(choices, probabilities):
     epsilon = [0.9, 0.1]
@@ -34,6 +31,9 @@ def draw_random_action(choices, probabilities):
     values = np.array(range(len(choices)))
     probs = np.array(probabilities)
     bins = np.add.accumulate(probs)
+    print(values)
+    print(probs)
+    print(bins)
     inds = values[np.digitize(random_sample(1), bins)]
     return choices[int(inds[0])]
 
@@ -70,9 +70,9 @@ class LearningAlgo(object):
         for _ in range(10):
             x = LearningMatrixRow()
             for _ in range(10):
-                x.matrix_row.append(1 / 10.0)
+                x.matrix_row.append(0)
             self.q_matrix.matrix.append(x)
-
+        # self.q_matrix.matrix[0] = LearningMatrixRow([1,0,0,0,0,0,0,0,0,0])
         self.matrix_pub.publish(self.q_matrix)
 
     # def get_status(self, data):
@@ -81,7 +81,6 @@ class LearningAlgo(object):
     def get_reward(self, data):
         if not self.initialized:
             return
-
         self.reward = data.reward
         self.update_action_probs()
 
@@ -89,7 +88,6 @@ class LearningAlgo(object):
 
         if not self.initialized:
             return
-
         alpha = 1
         gamma = 0.5
 
@@ -103,9 +101,11 @@ class LearningAlgo(object):
             (self.reward / 10.0) + gamma * max_action - current_val
         )
         self.q_matrix.matrix[self.processed_action].matrix_row[
-            self.selected_action
-        ] += change
+            self.selected_action] = current_val + change
+        # print(self.q_matrix)
         self.matrix_pub.publish(self.q_matrix)
+        # print("New matrix")
+        # print(self.q_matrix)
 
     def get_command(self, data):
         if not self.initialized:
@@ -155,10 +155,13 @@ class LearningAlgo(object):
         print("Processed Command: " + str(self.processed_action))
         # Select an action using the action probability matrix
         actions = list(range(10))
+        probabilities = self.q_matrix.matrix[self.processed_action].matrix_row[:]
+        # print(probabilities)
         self.selected_action = draw_random_action(
-            actions, self.q_matrix.matrix[self.processed_action].matrix_row
+            actions, probabilities
         )
-
+        # print(probabilities)
+        # print( self.q_matrix.matrix[self.processed_action].matrix_row)
         # Publish the action
         action = Action()
         action.action = self.selected_action

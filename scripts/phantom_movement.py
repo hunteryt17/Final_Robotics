@@ -25,7 +25,8 @@ class PhantomDogMovement(object):
 
         # rospy.Subscriber('/robodog/action_reward', Reward, self.get_reward)
         self.action_pub = rospy.Publisher('robodog/action', Action, queue_size=10)
-
+        rospy.Subscriber('robodog/action', Action, self.get_action)
+        self.action_sent = None
         rospy.Subscriber('/robodog/action_status', ActionStatus, self.get_action_status)
         self.action_status_pub = rospy.Publisher('/robodog/action_status', ActionStatus, queue_size=10)
         self.action_status ="Idle"
@@ -43,12 +44,15 @@ class PhantomDogMovement(object):
         self.actions_seq = [
             "fetch red",
             "fetch red",
-            "fetch red",
-            "fetch red",
-            "fetch red",
-            "fetch red",
-            "fetch red",
-            "fetch red",
+            # "fetch red",
+            # "fetch red",
+            # "fetch red",
+            # "fetch red",
+            # "fetch red",
+            # "fetch red",
+            # "fetch red",
+            # "fetch red",
+            # "fetch red"
             # "fetch blue",
             # "fetch green",
             # "find red",
@@ -63,39 +67,72 @@ class PhantomDogMovement(object):
         self.initialized = True
         self.execute_robot_action()
 
+    def select_command(self):
+        
+        actions = ["fetch red", 
+            "fetch blue", 
+            "fetch green",
+            "find red",
+            "find blue",
+            "find green",
+            "come",
+            "follow",
+            "shake",
+            "roll"
+        ]
+        # return random.choice(actions)
+        return "fetch red"
+        
+    def all_or_nothing_rewarding(self, actual_command, processed_commad):
+        commands = {
+            "fetch red": 0,
+            "fetch blue": 1,
+            "fetch green": 2,
+            "find red": 3,
+            "find blue": 4,
+            "find green": 5,
+            "come": 6,
+            "follow": 7,
+            "shake": 8,
+            "roll": 9,
+        }
+        print("Commands does it match 1: " + str(commands[actual_command]) )
+        print("Processed Command: " + str(processed_commad))
+        if commands[actual_command] == processed_commad:
+            return 10
+        return 0
 
     def execute_robot_action(self):
         if not self.initialized:
             return 
         time.sleep(0.5)
 
-        if (len(self.actions_seq) > 0):
+        # if (len(self.actions_seq) > 0):
 
-            robot_command_to_take = self.actions_seq[0]
+        robot_command_to_take = self.select_command()
 
-            print(robot_command_to_take)
-            command = UserCommand()
-            command.command = robot_command_to_take
-            self.command_pub.publish(command)
-            self.action_status_pub.publish(ActionStatus(status ="Complete"))
-            while self.action_status != "Complete":
-                print("waiting for action completion")
-            
-            # Give arbitary reward
-            curr_matrix = self.learning_matrix
-            reward = random.randint(0, 10)
-            self.reward_pub.publish(0)
-            # print("Reward: " + str(reward))
-            # print("Waiting for matrix to update")
-            while curr_matrix == self.learning_matrix:
-                pass
-            # print("Matrix after reward")
-            # print(self.learning_matrix)
-    
-            self.actions_seq.pop(0)
-            self.action_status_pub.publish(ActionStatus(status = "Idle"))
-            # rospy.sleep(1)
-            self.execute_robot_action()
+        print(robot_command_to_take)
+        command = UserCommand()
+        command.command = robot_command_to_take
+        self.command_pub.publish(command)
+        self.action_status_pub.publish(ActionStatus(status ="Complete"))
+        while self.action_status != "Complete":
+            # print("waiting for action completion")
+            pass
+        # Give arbitary reward
+        # curr_matrix = self.learning_matrix
+        reward = self.all_or_nothing_rewarding(robot_command_to_take, self.action_sent)
+        self.reward_pub.publish(reward)
+     
+        print("New matrix \n")
+        print(self.learning_matrix)
+
+        # self.actions_seq.pop(0)
+        self.action_status_pub.publish(ActionStatus(status = "Idle"))
+        self.iteration += 1
+        print("Action Complete: " + str(self.iteration))
+        # rospy.sleep(1)
+        self.execute_robot_action()
 
 
     def get_action_status(self, data):
@@ -103,6 +140,10 @@ class PhantomDogMovement(object):
 
     def get_matrix(self, data):
         self.learning_matrix = data.matrix
+
+    def get_action(self, data):
+        self.action_sent = data.action
+
 
     def run(self):
         rospy.spin()
