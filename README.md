@@ -84,13 +84,13 @@ Follow
 
 ![follow](follow_action.gif)
 
-Find
+Find (Red)
 
-![find](find_action.gif)
+![find](find_red_action.gif)
 
-Follow
+Fetch (Green)
 
-![fetch](fetch_action.gif)
+![fetch](fetch_green_action.gif)
 
 ### Emotes
 
