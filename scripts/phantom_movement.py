@@ -42,15 +42,22 @@ class PhantomDogMovement(object):
         # numbered block model names
         self.actions_seq = [
             "fetch red",
-            "fetch blue",
-            "fetch green",
-            "find red",
-            "find blue",
-            "find green",
-            "come",
-            "follow",
-            "shake",
-            "roll"
+            "fetch red",
+            "fetch red",
+            "fetch red",
+            "fetch red",
+            "fetch red",
+            "fetch red",
+            "fetch red",
+            # "fetch blue",
+            # "fetch green",
+            # "find red",
+            # "find blue",
+            # "find green",
+            # "come",
+            # "follow",
+            # "shake",
+            # "roll"
         ]
 
         self.initialized = True
@@ -70,8 +77,8 @@ class PhantomDogMovement(object):
             command = UserCommand()
             command.command = robot_command_to_take
             self.command_pub.publish(command)
-            rospy.sleep(1)
-
+            # rospy.sleep(1)
+            print("after command sleep")
             # Update Action Status
             self.action_status_pub.publish(ActionStatus(status ="Complete"))
             while self.action_status != "Complete":
@@ -82,15 +89,15 @@ class PhantomDogMovement(object):
             curr_matrix = self.learning_matrix
             reward = random.randint(0, 10)
             self.reward_pub.publish(reward)
-            rospy.sleep(1)
+            # print("Waiting for matrix to update")
             while curr_matrix == self.learning_matrix:
-                print("Waiting for matrix to update")
-            print("Matrix after reward")
+                pass
+            # print("Matrix after reward")
             print(self.learning_matrix)
             # reset the flag and the action in the queue
             self.actions_seq.pop(0)
             self.action_status_pub.publish(ActionStatus(status = "Idle"))
-            rospy.sleep(1)
+            # rospy.sleep(1)
             self.execute_robot_action()
 
 

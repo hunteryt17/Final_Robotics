@@ -22,9 +22,16 @@ def draw_random_action(choices, probabilities):
     if not choice:
         return np.random.choice(10)
 
+    probability_sum = 0.0
     # Use Q Matrix to select new action
     for p in probabilities:
         p += 1
+        probability_sum += p 
+    
+    for p in probabilities:
+        p = p/probability_sum
+    
+
     values = np.array(range(len(choices)))
     probs = np.array(probabilities)
     bins = np.add.accumulate(probs)
@@ -43,12 +50,13 @@ class LearningAlgo(object):
         self.action_pub = rospy.Publisher(
             "robodog/action", Action, queue_size=10
         )
+
         self.matrix_pub = rospy.Publisher(
             "robodog/learning_matrix", LearningMatrix, queue_size=10
         )
-        rospy.Subscriber(
-            "/robodog/action_status", ActionStatus, self.get_status
-        )
+        # rospy.Subscriber(
+        #     "/robodog/action_status", ActionStatus, self.get_status
+        # )
         self.action_status = "Idle"
         self.command = None
         self.selected_action = None
@@ -68,18 +76,17 @@ class LearningAlgo(object):
 
         self.matrix_pub.publish(self.q_matrix)
 
-    def get_status(self, data):
-        self.action_status = data.status
+    # def get_status(self, data):
+    #     self.action_status = data.status
 
     def get_reward(self, data):
         if not self.initialized:
             return
         self.reward = data.reward
         # print(self.action_status)
-        if self.reward:
-            # print("Received Reward")
-            # print(self.reward)
-            self.update_action_probs()
+        
+        self.update_action_probs()
+        # print(self.q_matrix)
 
     def update_action_probs(self):
         alpha = 1
@@ -104,6 +111,7 @@ class LearningAlgo(object):
         print("Updating Action Matrix")
         print(self.q_matrix)
         self.matrix_pub.publish(self.q_matrix)
+        rospy.sleep(0.5)
 
     def get_command(self, data):
         if not self.initialized:
