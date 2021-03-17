@@ -73,3 +73,44 @@ class ImageProcessor:
             return M["m10"] / M["m00"] - w / 2
 
         return float("inf")
+
+    def get_y_center_for_color(self, color: str) -> float:
+        """Gets the y-center of the image for the given color.
+
+        Parameters:
+            color: one of "red", "green", "blue", or "yellow"
+        Returns:
+            The x coordinate of the center of the color in the current image.
+            If no pixels of the color are found, returns -1.
+        """
+
+        if color not in self.color_map:
+            print(f"Color {color} not found")
+            return
+
+        while self.image is None:
+            pass
+
+        image = self.image
+        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+
+        lower_color, upper_color = self.color_map[color]
+
+        h, w, d1 = image.shape
+        search_top = int(h / 2)
+        search_bot = int(h / 2 + 1)
+
+        mask = cv2.inRange(hsv, lower_color, upper_color)
+
+        # Erase all pixels that aren't the correct color
+        mask[0:search_top, 0:w] = 0
+        mask[search_bot:h, 0:w] = 0
+
+        # Determine the center of the dumbbell
+        M = cv2.moments(mask)
+        # Get the center of the dumbbell if color pixels are found
+        if M["m00"] > 0:
+            # center of the colored pixels in the image
+            return M["m01"] / M["m00"] - h / 2
+
+        return float("inf")

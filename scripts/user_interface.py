@@ -104,8 +104,11 @@ class UserInterface(object):
                     else:
                         print("Please enter a reward on a scale of 0 to 10")
                         
-                print("Reward received")
+                
                 self.reward_pub.publish(self.reward)
+                print("Reward received")
+                print("processing...")
+                rospy.sleep(3)
                 self.busy = False
                 self.action_status = 'idle'
 

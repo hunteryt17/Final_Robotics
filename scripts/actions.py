@@ -82,6 +82,7 @@ class RobotActions:
 
             linear = min(speed + 0.05, max_speed, distance * 0.1)
             angular = -center * 0.01
+
             self.set_speed(linear_x=linear, angular_z=angular)
             rate.sleep()
         self.set_speed()
@@ -142,6 +143,12 @@ class RobotActions:
 
         rate = rospy.Rate(10)
 
+        distance = self.ranges[0]
+
+        # keep moving until it reaches dumbbell
+        linear = min(0.05, distance * 0.1)
+        self.set_speed(linear_x=linear)
+
         # open grip to get dumbbell
         self.arm_manipulator.open_grip()
 
@@ -155,8 +162,10 @@ class RobotActions:
         self.arm_manipulator.lift_dumbbell()
 
         # check to see if successfully lifted dumbbell
-        if min(self.ranges) > 0.3:
+        if self.image_processor.get_y_center_for_color(color) == float("inf"):
             return Result.SUCCESS
+        elif self.image_processor.get_y_center_for_color(color) > -50:
+            self.pick_up_dumbbell(color)
         else:
             return Result.FAILURE
 
