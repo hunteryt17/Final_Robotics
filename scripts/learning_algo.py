@@ -24,18 +24,17 @@ def draw_random_action(choices, probabilities):
 
     probability_sum = 0.0
     # Use Q Matrix to select new action
-    for p in probabilities:
-        p += 1
-        probability_sum += p 
+    for p in range(len(probabilities)):
+        probabilities[p] += 1
+        probability_sum += probabilities[p]
     
-    for p in probabilities:
-        p = p/probability_sum
-    
+    for p in range(len(probabilities)):
+        probabilities[p] =  probabilities[p] /probability_sum
 
     values = np.array(range(len(choices)))
     probs = np.array(probabilities)
     bins = np.add.accumulate(probs)
-    inds = values[np.digitize(random_sample(10), bins)]
+    inds = values[np.digitize(random_sample(1), bins)]
     return choices[int(inds[0])]
 
 
@@ -82,36 +81,30 @@ class LearningAlgo(object):
     def get_reward(self, data):
         if not self.initialized:
             return
+
         self.reward = data.reward
-        # print(self.action_status)
-        
         self.update_action_probs()
-        # print(self.q_matrix)
+        
 
     def update_action_probs(self):
+        
+        if not self.initialized:
+            return
+
         alpha = 1
         gamma = 0.5
-
-        # get value
+        
         current_val = self.q_matrix.matrix[self.processed_action].matrix_row[
             self.selected_action
         ]
-
-        # get max value of all actions for state2
         max_action = max(
             self.q_matrix.matrix[self.processed_action].matrix_row
         )
-
-        # update q matrix for state1 & action_t
+        change = alpha * ((self.reward / 10.0) + gamma * max_action - current_val)
         self.q_matrix.matrix[self.processed_action].matrix_row[
             self.selected_action
-        ] += int(
-            alpha * (self.reward / 10.0 + gamma * max_action - current_val)
-        )
-        print("Updating Action Matrix")
-        print(self.q_matrix)
+        ] += change
         self.matrix_pub.publish(self.q_matrix)
-        rospy.sleep(0.5)
 
     def get_command(self, data):
         if not self.initialized:
@@ -158,7 +151,7 @@ class LearningAlgo(object):
         # Subscribe to topic that sends the processed command and convert
         # command to numeric
         self.processed_action = self.process_command()
-        print(self.processed_action)
+        print("Processed Command: " + str(self.processed_action))
         # Select an action using the action probability matrix
         actions = list(range(10))
         self.selected_action = draw_random_action(
@@ -169,7 +162,7 @@ class LearningAlgo(object):
         action = Action()
         action.action = self.selected_action
         self.action_pub.publish(action)
-        print(self.selected_action)
+        print("Selected Action: " + str(self.selected_action))
         print("action complete\n")
 
     def run(self):

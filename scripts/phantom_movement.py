@@ -77,24 +77,21 @@ class PhantomDogMovement(object):
             command = UserCommand()
             command.command = robot_command_to_take
             self.command_pub.publish(command)
-            # rospy.sleep(1)
-            print("after command sleep")
-            # Update Action Status
             self.action_status_pub.publish(ActionStatus(status ="Complete"))
             while self.action_status != "Complete":
                 print("waiting for action completion")
-            print("Action marked as completed!")
             
             # Give arbitary reward
             curr_matrix = self.learning_matrix
             reward = random.randint(0, 10)
-            self.reward_pub.publish(reward)
+            self.reward_pub.publish(0)
+            # print("Reward: " + str(reward))
             # print("Waiting for matrix to update")
             while curr_matrix == self.learning_matrix:
                 pass
             # print("Matrix after reward")
-            print(self.learning_matrix)
-            # reset the flag and the action in the queue
+            # print(self.learning_matrix)
+    
             self.actions_seq.pop(0)
             self.action_status_pub.publish(ActionStatus(status = "Idle"))
             # rospy.sleep(1)
