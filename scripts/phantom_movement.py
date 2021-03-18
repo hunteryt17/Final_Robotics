@@ -83,6 +83,8 @@ class PhantomDogMovement(object):
         OldRange =  OldMax- OldMin  
         NewRange = NewMax -NewMin
         probability_sum = 0.0
+        if OldRange == 0:
+            return
         # Use Q Matrix to select new action
         for p in range(len(matrix_val_row)):
             matrix_val_row[p] = (((matrix_val_row[p] - OldMin) * NewRange) / OldRange) + NewMin
@@ -142,24 +144,25 @@ class PhantomDogMovement(object):
         if not self.initialized:
             return 
         time.sleep(0.5)
-        self.robot_command_to_take = self.select_command()
-        command = UserCommand()
-        command.command = self.robot_command_to_take
-        self.command_pub.publish(command)
-        self.action_status_pub.publish(ActionStatus(status ="Complete"))
-        while self.action_status != "Complete":
-            pass
-        reward = self.all_or_nothing_rewarding(self.robot_command_to_take, self.action_sent)
-        self.reward_pub.publish(reward)
-    
-        self.action_status_pub.publish(ActionStatus(status = "Idle"))
-        self.total_iteration += 1
-        self.action_iteration += 1
-        print("Action Complete: " + str(self.action_iteration))
-        if self.action_iteration > 5:
-            self.check_convergence()
-        # rospy.sleep(1)
-        self.execute_robot_action()
+        if self.action_num < 10:
+            self.robot_command_to_take = self.select_command()
+            command = UserCommand()
+            command.command = self.robot_command_to_take
+            self.command_pub.publish(command)
+            self.action_status_pub.publish(ActionStatus(status ="Complete"))
+            while self.action_status != "Complete":
+                pass
+            reward = self.all_or_nothing_rewarding(self.robot_command_to_take, self.action_sent)
+            self.reward_pub.publish(reward)
+        
+            self.action_status_pub.publish(ActionStatus(status = "Idle"))
+            self.total_iteration += 1
+            self.action_iteration += 1
+            print("Action Complete: " + str(self.action_iteration))
+            if self.action_iteration > 5:
+                self.check_convergence()
+            # rospy.sleep(1)
+            self.execute_robot_action()
 
 
     def get_action_status(self, data):
@@ -167,8 +170,6 @@ class PhantomDogMovement(object):
 
     def get_matrix(self, data):
         self.learning_matrix = data.matrix
-
-
 
     def get_action(self, data):
         self.action_sent = data.action
