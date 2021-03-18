@@ -4,6 +4,14 @@
 
 **Team members: Li Arditi, Kiana Hobbs, Hunter Thompson, Sebastian Villegas Mejia**
 
+## How to Run Program
+#### RoboDog Program:
+
+#### Covergence Script:
+1. `roscore`
+2. `rosun robodog learning_algo.py`
+3. `rosrun robodog `
+
 ## Project Description
 [Describe the goal of your project, why it's interesting, what you were able to make your robot do, and what the main components of your project are and how they fit together - please include diagrams and gifs when appropriate]
 
@@ -69,7 +77,6 @@ In order to know if the published action has been completed or failed, the user 
 
 ## Challenges
 [These should take a similar form and structure to how you approached these in the previous projects (1 paragraph each for the challenges and future work and a few bullet points for takeaways)]
-- defining the scope of the project (esp in terms of the reinforcement learning and the rewward system)
 * Another major challenge that we faced throughout the project was defining the 
   world and making sure that everything loaded correctly in it. For example, 
   initially we tried to have a human model to represent the person in our
@@ -86,21 +93,20 @@ In order to know if the published action has been completed or failed, the user 
 
 ## Future Work
 
-- One aspect of the bot that we would improve upon in the future would be 
+* One aspect of the bot that we would improve upon in the future would be 
   increasing the complexity of the bots actions. There are two main ways that we 
   thought we could do this. The first would be increasing the complexity of the 
   fetch/find action by including object detection and avoidance on top of having
   the bot search for the object (discussed more further on). We could have also 
   included further more complex actions such as an obstacle course that the bot
   could run or including a ramp that the bot would traverse over.
-- maybe make the learning algorithm more robust?
-- As mentioned earlier, we considered making the bot more complex through having
+* maybe make the learning algorithm more robust?
+* As mentioned earlier, we considered making the bot more complex through having
   it search and avoid obstacles when performing fetch/find. In the future, we
   also would have liked to include walls and a defined room that way the bot 
   could search around this space for the dumbbells and avoid any ways/obstacles
   in the way. It might better mimic a dog looking around a room for their
   favorite toy and bringing it back to the owner. 
-- defining convergence
 
 
 ## Takeaways
@@ -116,11 +122,13 @@ In order to know if the published action has been completed or failed, the user 
     presentations as well as being able to message each other for smaller details
   * While integrating all of our components, it was much simpler to be able to 
     ask each other about various features through messaging and debugging 
-    togetehr as each person knew their respective compnenet best
+    together as each person knew their respective component best
 
 * takeaway3
   * 
-
+## ROS bags
+1. A ros bag titled "convergence.bags" includes the recording of the `/scripts/learning_algo.py' and '/scripts/phantom_movement.py' on a diagonal matrix.
+2. 
 ## Final Product Gifs
 
 ### Actions
