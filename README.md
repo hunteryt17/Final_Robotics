@@ -23,15 +23,19 @@ The major robotics algorithm used to accomplish this behavior was a reinforcemen
 (implemented in `/scripts/learning_algo.py` and tested in `/scripts/phantom_movement.py`)
 
 `/scripts/learning_algo.py`
+
 To emphasize the training aspect of our RoboDog, we wanted to ensure that there was some form of learning involved in determining how the RoboDog would react to commands. To implement the idea of exploration over exploitation, we used the Q-Learning Algorithm, a probability space, and a greedy epsilon. We initialized a Q-Matrix with on the given command and the command executed, such as the user inputs "fetch blue" (given command) and the RoboDog completes the action "roll" (command executed).
-![Learning Process Diagram](images\learning_process_diagram.png)
-![Matrix Diagram](images\matrix_diagram.png)
+
+![Learning Process Diagram](images/learning_process_diagram.png)
+
+![Matrix Diagram](images/matrix_diagram.png)
 
 To draw a random action (`draw_random_action()`) from the learning matrix, we normalized the values in the matrix to extrapolate it onto a probability space, and chose a random action from that space. Moreover, to further emphasize some exploration, we added a greedy epsilon of 0.9, such that 90% of the time the algorithm choosing a value using the probability space and 10% of the time it is completely random. 
 
 Whenever a reward was published, the Q-Matrix would update for the given cell. The published rewards were scaled down to be out of 1 from 10. Also, if the RoboDog received a 0 reward from the user, that reward is converted to a negative 10, or -1 scaled down, to include negative reinforcement. Moreover, given the large state space for our algorithm, we had to select an alpha of 1 and a gamma of 0.01 to have a semi-reasonable speed learning time. However, even with this alpha and gamma, it could take up to 300 iterations to converge a single command. 
 
 `/scripts/phantom_movement.py`
+
 Given our program is user command driven and not completely automated, we developed a phantom movement script, similar to that from the Q-Learning project to gauge learning speed and convergence. The phantom script implements an all or nothing rewarding system (either the command is right, 10, or wrong, 0), that iterates through the possible commands until convergence is reached for each trick. We check convergence by implementing the normalizing function from the learning matrix to see if the matrix cell for where the given command matches the executed command has a probability of more than 99%. We initially had determined convergence at a higher probability, but for the sake of speedy up the convergence process, we lowered it to its current value.
 
 ### 2. Robot Perception and Movement
