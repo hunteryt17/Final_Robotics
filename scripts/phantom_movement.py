@@ -62,6 +62,7 @@ class PhantomDogMovement(object):
         self.action_num = 0
         self.initialized = True
         print("Phantom initialization complete")
+        print("WARNING: Whether the matrix converges depends on each individual trick run. Runs can take anywhere from 50 to 500 iterations to converge. ")
 
         self.execute_robot_action()
 
