@@ -62,9 +62,9 @@ Whenever a reward was published, the Q-Matrix would update for the given cell (`
 
 #### `/scripts/phantom_movement.py`
 
-Given our program is user command driven and not completely automated, we developed a phantom movement script, similar to that from the Q-Learning project to gauge learning speed and convergence. The phantom script implements an all or nothing rewarding system (either the command is right, 10, or wrong, 0), that iterates through the possible commands (`execute_robot_action()`) until convergence is reached for each trick. We check convergence by implementing the normalizing function from the learning matrix to see if the matrix cell for where the given command matches the executed command has a probability of more than 99% (`check_convergence()`). We initially had determined convergence at a higher probability, but for the sake of speedy up the convergence process, we lowered it to its current value. 
+Given our program is user command driven and not completely automated, we developed a phantom movement script, similar to that from the Q-Learning project, to gauge learning speed and convergence. The phantom script implements an all or nothing rewarding system (either the command is right, 10, or wrong, 0), that iterates through the possible commands (`execute_robot_action()`) until convergence is reached for each trick. We check convergence by implementing the normalizing function from the learning matrix to see if the matrix cell for where the given command matches the executed command has a probability of more than 99% (`check_convergence()`). We initially had determined convergence at a higher probability, but for the sake of speedy up the convergence process, we lowered it to its current value. 
 
-Due to the large state space, a zero matrix is unable to reach convergence before the system times out because of warnings, such as too much recursion (after about 900 iterations) or storage overflow. As such to test the "trained" dog, we added a section in the `/scripts/learning_algo.py` that can be uncommented to initialize the starting matrix to a diagonal matrix.
+Due to the large state space, a zero matrix is unable to reach convergence before the system times out because of warnings, such as too much recursion (after about 900 iterations) or storage overflow. As such to test the "trained" dog for convergence, we added a section in the `/scripts/learning_algo.py` that can be uncommented to initialize the starting matrix to a diagonal matrix.
 
 
 ### 2. Robot Perception and Movement
@@ -77,12 +77,12 @@ reused functions such as `turn_to` and `go_to` to call many of our actions, such
 as find and fetch. These functions allowed the bot to turn towards the indicated
 color and go towards it respectively. Additionally, a lot of time was spent 
 tinkering with the robot arm and grip control to make the actions more robust. 
-This can be seen in the `pick_up_dumbbell` function as we spent time 
+This can be seen in the `pick_up_dumbbell()` function as we spent time 
 experimenting with the velocity and gripper so that the dumbbell would not
 fall down when picked up from a variety of angles. Additional functionality was
 added through image processing to detect whether the dumbbell was successfully
 picked up and to try again if it failed. Finally, all of the arm control actions 
-were programmed based on what was asthetically good for the bot, such as `shake`.
+were programmed based on what was asthetically good for the bot, such as `shake()`.
 
 ### 3. User Interface
 
@@ -100,7 +100,7 @@ In order to know if the published action has been completed or failed, the user 
 
 ## Challenges
 
-One of the main challenges we had was identifying the scope of our project. Especially at the beginning we were having trouble deciding how the reward system and reinforcement learning should work. We were eventually able to resolve the issue by taking a step back and first clearly defining the actions we intended on implementing. From that we were able to more concretely figure out what we needed the user interface and learning algorithm to do.
+One of the main challenges we had was identifying the scope of our project. Especially at the beginning we were having trouble deciding how the reward system and reinforcement learning should work. We were eventually able to resolve the issue by taking a step back and first clearly defining the actions we intended on implementing. From that we were able to more concretely figure out what we needed the user interface and learning algorithm to do. Moreover, with the learning algorithm, we had to tinker with many variables, like the alpha, gamma, reward scaling, and convergence threshold, to get the RoboDog to learn at a semi-reasonable speed and to also make convergence remotely possible. 
 
 Another major challenge that we faced throughout the project was defining the 
 world and making sure that everything loaded correctly in it. For example, 
@@ -131,6 +131,7 @@ was much simpler to launch the bot in the launch file instead.
   could search around this space for the dumbbells and avoid any ways/obstacles
   in the way. It might better mimic a dog looking around a room for their
   favorite toy and bringing it back to the owner. 
+* Additionally, in the future, it would be interesting to explore ways of balancing a large state space with a reasonable learning complexity speed. Having a better balance between the two would make having a dog that "Mastered" all, or even one, of the tricks more attainable through the user interface.
 
 
 ## Takeaways
