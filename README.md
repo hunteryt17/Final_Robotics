@@ -6,9 +6,9 @@
 
 ## How to Run Program
 #### RoboDog Program:
-0. `roscore`
-1. `roslaunch robodog robodog.launch`
-2. `rosrun robodog user_interface.py`
+1. `roscore`
+2. `roslaunch robodog robodog.launch`
+3. `rosrun robodog user_interface.py`
 #### Covergence Script:
 1. `roscore`
 2. `rosun robodog learning_algo.py`
@@ -18,19 +18,20 @@
 
 Behold! An interactive robot-dog you can train and love during these isolating times. 
 
-The goal of this project is to program a robot to be pet-like because we wanted to connect reinforcement learning with human-computer interaction. Machine learning has become a hot-topic in computer science/robotics, and with the pandemic people have had more time to play with and train their pets. So, we thought it would be interesting to combine these two things and create something that encourages human-robot interaction similar to/based on the way humans interact with pets (more specifically dogs because they're more responsive and dependent on humans). Overall, we were able to make a robot pet-like in that it can be given specific commands and execute the correct action (while also (hopefully) having some personality). The different commands included: roll (spin around), shake (extend arm and move up and down), come (go to the person, as represented by a yellow object), follow (follow the yellow object as the user moves it around), find \[color\] (go to the dumbbell of the specified color), and fetch \[color\] (go to and bring back the dumbbell of the specified color).
+The goal of this project is to program a robot to be pet-like because we wanted to connect reinforcement learning with human-computer interaction. Machine learning has become a hot-topic in computer science/robotics, and with the pandemic, people have had more time to play with and train their pets. So, we thought it would be interesting to combine these two things and create something that encourages human-robot interaction similar to/based on the way humans interact with pets (more specifically dogs because they're more responsive and dependent on humans). Overall, we were able to make a robot pet-like in that it can be given specific commands and execute the correct action (while also having some personality). The different commands included: roll (spin around), shake (extend arm and move up and down), come (go to the person, as represented by a yellow object), follow (follow the yellow object as the user moves it around), find \[color\] (go to the dumbbell of the specified color), and fetch \[color\] (go to and bring back the dumbbell of the specified color).
 
-The major robotics algorithm used to accomplish this behavior was a reinforcement learning algorithm that used reward values given by the user once the robot completed an action. The other main components included robot perception and movement and the user interface. The three components interacted with each other through custom ros topics and messages. First, the user interface prompts the user for a command. If that command is valid then it publishes to `/robodog/user_cmd` which the learning algorithm node subscribes to. Based on the current matrix, it decides the action the robot will take and publishes it to `/robodog/action` which the action execution node subscribes to. Once the action is complete, the action execution node publishes the status of the robot/action and which action it completed/attempted to `/robodog/action_status` which the user interface node subscribes to. Once the user interface node receives that the action was complete (or failed), it prompts the user for a reward which is published to `/robodog/action_reward` for the learning algorithm node to receive and update the matrix with. 
+The major robotics algorithm used to accomplish this behavior was a reinforcement learning algorithm that used reward values given by the user once the robot completed an action. The other main components included robot perception and movement and the user interface. The three components interacted with each other through custom ros topics and messages. First, the user interface prompts the user for a command. If that command is valid then it publishes to `/robodog/user_cmd` which the learning algorithm node subscribes to. Based on the current matrix in `/robodog/learning_matrix`, it decides the action the robot will take and publishes it to `/robodog/action` which the action execution node subscribes to. Once the action is complete, the action execution node publishes the status of the robot/action and which action it completed/attempted to `/robodog/action_status` which the user interface node subscribes to. Once the user interface node receives that the action was complete (or failed), it prompts the user for a reward which is published to `/robodog/action_reward` for the learning algorithm node to receive and update the matrix with. 
 
 
 ## System Architecture:
 
 ### 1. Reinforcement Learning
+
 (implemented in `/scripts/learning_algo.py` and tested in `/scripts/phantom_movement.py`)
 
 `/scripts/learning_algo.py`
 
-To emphasize the training aspect of our RoboDog, we wanted to ensure that there was some form of learning involved in determining how the RoboDog would react to commands. To implement the idea of exploration over exploitation, we used the Q-Learning Algorithm, a probability space, and a greedy epsilon. We initialized a Q-Matrix with on the given command and the command executed, such as the user inputs "fetch blue" (given command) and the RoboDog completes the action "roll" (command executed).
+To emphasize the training aspect of our RoboDog, we wanted to ensure that there was some form of learning involved in determining how the RoboDog would react to commands. To implement the idea of exploration over exploitation, we used the Q-Learning Algorithm, a probability space, and a greedy epsilon. We initialized a Q-Matrix (`initialize_matrix()`) on the given command and the command executed, such as the user inputs "fetch blue" (given command) and the RoboDog completes the action "roll" (command executed).
 
 ![Learning Process Diagram](images/learning_process_diagram.png)
 
@@ -38,13 +39,16 @@ To emphasize the training aspect of our RoboDog, we wanted to ensure that there 
 
 To draw a random action (`draw_random_action()`) from the learning matrix, we normalized the values in the matrix to extrapolate it onto a probability space, and chose a random action from that space. Moreover, to further emphasize some exploration, we added a greedy epsilon of 0.9, such that 90% of the time the algorithm choosing a value using the probability space and 10% of the time it is completely random. 
 
-Whenever a reward was published, the Q-Matrix would update for the given cell. The published rewards were scaled down to be out of 1 from 10. Also, if the RoboDog received a 0 reward from the user, that reward is converted to a negative 10, or -1 scaled down, to include negative reinforcement. Moreover, given the large state space for our algorithm, we had to select an alpha of 1 and a gamma of 0.01 to have a semi-reasonable speed learning time. However, even with this alpha and gamma, it could take up to 300 iterations to converge a single command. 
+Whenever a reward was published, the Q-Matrix would update for the given cell (`update_q_matrix()`). The published rewards were scaled down to be out of 1 from 10. Also, if the RoboDog received a 0 reward from the user, that reward is converted to a negative 10, or -1 scaled down, to include negative reinforcement. Moreover, given the large state space for our algorithm, we had to select an alpha of 1 and a gamma of 0.01 to have a semi-reasonable speed learning time. However, even with this alpha and gamma, it could take up to 300 iterations to converge a single command. 
 
 `/scripts/phantom_movement.py`
 
-Given our program is user command driven and not completely automated, we developed a phantom movement script, similar to that from the Q-Learning project to gauge learning speed and convergence. The phantom script implements an all or nothing rewarding system (either the command is right, 10, or wrong, 0), that iterates through the possible commands until convergence is reached for each trick. We check convergence by implementing the normalizing function from the learning matrix to see if the matrix cell for where the given command matches the executed command has a probability of more than 99%. We initially had determined convergence at a higher probability, but for the sake of speedy up the convergence process, we lowered it to its current value.
+Given our program is user command driven and not completely automated, we developed a phantom movement script, similar to that from the Q-Learning project to gauge learning speed and convergence. The phantom script implements an all or nothing rewarding system (either the command is right, 10, or wrong, 0), that iterates through the possible commands (`execute_robot_action()`) until convergence is reached for each trick. We check convergence by implementing the normalizing function from the learning matrix to see if the matrix cell for where the given command matches the executed command has a probability of more than 99% (`check_convergence()`). We initially had determined convergence at a higher probability, but for the sake of speedy up the convergence process, we lowered it to its current value. 
+
+Due to the large state space, a zero matrix is unable to reach convergence before the system times out because of warnings, such as too much recursion (after about 900 iterations) or storage overflow. As such to test the "trained" dog, we added a section in the `/scripts/learning_algo.py` that can be uncommented to initialize the starting matrix to a diagonal matrix.
 
 ### 2. Robot Perception and Movement
+
 (implemented in `/scripts/actions.py`)
 
 When designing the movement, we tried to make our functions to be general enough
@@ -61,6 +65,7 @@ picked up and to try again if it failed. Finally, all of the arm control actions
 were programmed based on what was asthetically good for the bot, such as `shake`.
 
 ### 3. User Interface
+
 (implemented in `/scripts/user_interface.py`)
 
 Although this component of the project didn't involve many complicated algorithms or code, it is still a major component. This is how the user will interact with the robot to give it commands and rewards. The structure of the code is based on the following logic:
@@ -125,7 +130,7 @@ was much simpler to launch the bot in the launch file instead.
 
 
 ## ROS bags
-1. A ros bag titled "convergence.bags" includes the recording of the `/scripts/learning_algo.py' and '/scripts/phantom_movement.py' on a diagonal matrix.
+1. A ros bag titled "convergence.bags" includes the recording of the `/scripts/learning_algo.py` and `/scripts/phantom_movement.py` on a diagonal matrix.
 2. 
 
 ## Final Product Gifs
