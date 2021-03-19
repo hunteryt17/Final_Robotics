@@ -10,22 +10,24 @@
 #### Covergence Script:
 1. `roscore`
 2. `rosun robodog learning_algo.py`
-3. `rosrun robodog `
+3. `rosrun robodog phantom_movement.py`
+
+#### User Interface
+0. `roscore`
+1. `roslaunch robodog robodog.launch`
+2. `rosrun robodog user_interface.py`
+
 
 ## Project Description
-[Describe the goal of your project, why it's interesting, what you were able to make your robot do, and what the main components of your project are and how they fit together - please include diagrams and gifs when appropriate]
 
 Behold! An interactive robot-dog you can train and love during these isolating times. 
 
 The goal of this project is to program a robot to be pet-like because we wanted to connect reinforcement learning with human-computer interaction. Machine learning has become a hot-topic in computer science/robotics, and with the pandemic people have had more time to play with and train their pets. So, we thought it would be interesting to combine these two things and create something that encourages human-robot interaction similar to/based on the way humans interact with pets (more specifically dogs because they're more responsive and dependent on humans). Overall, we were able to make a robot pet-like in that it can be given specific commands and execute the correct action (while also (hopefully) having some personality). The different commands included: roll (spin around), shake (extend arm and move up and down), come (go to the person, as represented by a yellow object), follow (follow the yellow object as the user moves it around), find \[color\] (go to the dumbbell of the specified color), and fetch \[color\] (go to and bring back the dumbbell of the specified color).
 
-The major robotics algorithm used to accomplish this behavior was a reinforcement learning algorithm that used reward values given by the user once the robot completed an action. The other main components included robot perception and movement and the user interface. [finish writing about how they fit together briefly]
-
-[any diagrams?]
+The major robotics algorithm used to accomplish this behavior was a reinforcement learning algorithm that used reward values given by the user once the robot completed an action. The other main components included robot perception and movement and the user interface. The three components interacted with each other through custom ros topics and messages. First, the user interface prompts the user for a command. If that command is valid then it publishes to `/robodog/user_cmd` which the learning algorithm node subscribes to. Based on the current matrix, it decides the action the robot will take and publishes it to `/robodog/action` which the action execution node subscribes to. Once the action is complete, the action execution node publishes the status of the robot/action and which action it completed/attempted to `/robodog/action_status` which the user interface node subscribes to. Once the user interface node receives that the action was complete (or failed), it prompts the user for a reward which is published to `/robodog/action_reward` for the learning algorithm node to receive and update the matrix with. 
 
 
 ## System Architecture:
-[Describe in detail the robotics algorithm you implemented and each major component of your project, highlight what pieces of code contribute to these main components]
 
 ### 1. Reinforcement Learning
 (implemented in `/scripts/learning_algo.py` and tested in `/scripts/phantom_movement.py`)
@@ -48,6 +50,7 @@ Given our program is user command driven and not completely automated, we develo
 
 ### 2. Robot Perception and Movement
 (implemented in `/scripts/actions.py`)
+
 When designing the movement, we tried to make our functions to be general enough
 to be reused by multiple components and easily adjustable. For this reason, we 
 reused functions such as `turn_to` and `go_to` to call many of our actions, such
@@ -76,20 +79,22 @@ In order to know if the published action has been completed or failed, the user 
 
 
 ## Challenges
-[These should take a similar form and structure to how you approached these in the previous projects (1 paragraph each for the challenges and future work and a few bullet points for takeaways)]
-* Another major challenge that we faced throughout the project was defining the 
-  world and making sure that everything loaded correctly in it. For example, 
-  initially we tried to have a human model to represent the person in our
-  project; however, we quickly noticed that the model was not at all pleasing
-  to the eye in bright yellow on top of having issues with the feet of the person
-  getting in the way and the gap between the person's leg being somewhat 
-  problematic. Thus, we opted for a yellow cylinder. On top of this, we had
-  difficulty changing the colors of gazebo models initially as we tried to edit
-  the .dae files for the models, but had many issues doing so. It took us a while
-  to realize that we could edit models in the gazebo simulator itself, which 
-  greatly simplified the process. Finally, we encountered issues of making sure 
-  that our world file did not contain the bot as this bloated that file, and it 
-  was much simpler to launch the bot in the launch file instead. 
+
+One of the main challenges we had was identifying the scope of our project. Especially at the beginning we were having trouble deciding how the reward system and reinforcement learning should work. We were eventually able to resolve the issue by taking a step back and first clearly defining the actions we intended on implementing. From that we were able to more concretely figure out what we needed the user interface and learning algorithm to do.
+
+Another major challenge that we faced throughout the project was defining the 
+world and making sure that everything loaded correctly in it. For example, 
+initially we tried to have a human model to represent the person in our
+project; however, we quickly noticed that the model was not at all pleasing
+to the eye in bright yellow on top of having issues with the feet of the person
+getting in the way and the gap between the person's leg being somewhat 
+problematic. Thus, we opted for a yellow cylinder. On top of this, we had
+difficulty changing the colors of gazebo models initially as we tried to edit
+the .dae files for the models, but had many issues doing so. It took us a while
+to realize that we could edit models in the gazebo simulator itself, which 
+greatly simplified the process. Finally, we encountered issues of making sure 
+that our world file did not contain the bot as this bloated that file, and it 
+was much simpler to launch the bot in the launch file instead. 
 
 ## Future Work
 
@@ -100,8 +105,7 @@ In order to know if the published action has been completed or failed, the user 
   the bot search for the object (discussed more further on). We could have also 
   included further more complex actions such as an obstacle course that the bot
   could run or including a ramp that the bot would traverse over.
-* maybe make the learning algorithm more robust?
-* As mentioned earlier, we considered making the bot more complex through having
+* As mentioned above, we considered making the bot more complex through having
   it search and avoid obstacles when performing fetch/find. In the future, we
   also would have liked to include walls and a defined room that way the bot 
   could search around this space for the dumbbells and avoid any ways/obstacles
@@ -124,11 +128,11 @@ In order to know if the published action has been completed or failed, the user 
     ask each other about various features through messaging and debugging 
     together as each person knew their respective component best
 
-* takeaway3
-  * 
+
 ## ROS bags
 1. A ros bag titled "convergence.bags" includes the recording of the `/scripts/learning_algo.py' and '/scripts/phantom_movement.py' on a diagonal matrix.
 2. 
+
 ## Final Product Gifs
 
 ### Actions
@@ -157,15 +161,6 @@ Fetch (Green)
 
 ![fetch](fetch_green_action.gif)
 
-### Emotes
 
-Happy
 
-![happy](happy_emote.gif)
-
-Sad
-
-![sad](sad_emote.gif)
-
-### Learning
 
