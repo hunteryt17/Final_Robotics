@@ -81,8 +81,17 @@ This can be seen in the `pick_up_dumbbell()` function as we spent time
 experimenting with the velocity and gripper so that the dumbbell would not
 fall down when picked up from a variety of angles. Additional functionality was
 added through image processing to detect whether the dumbbell was successfully
-picked up and to try again if it failed. Finally, all of the arm control actions 
-were programmed based on what was asthetically good for the bot, such as `shake()`.
+picked up and to try again if it failed. Finally, all the arm control actions 
+were programmed based on what was aesthetically good for the bot, such as `shake()`.
+
+To make the actions robust, the robot makes no assumption about the conditions of 
+the environment. That is, the robot makes all its decisions based on sensor data.
+Specifically, it uses laser and image data to detect objects around its environment.
+If the robot were to make an interaction that is not possible with a given environment,
+for example, fetching a dumbbell it cannot see, it would stop attempting such action
+and notify the user that the action failed.
+
+Identifying the different objects was done solely through color detection.
 
 ### 3. User Interface
 
