@@ -134,27 +134,27 @@ was much simpler to launch the bot in the launch file instead.
 
 Roll
 
-![roll](roll_action.gif)
+![roll](gifs/roll_action.gif)
 
 Shake
 
-![shake](shake_action.gif)
+![shake](gifs/shake_action.gif)
 
 Come
 
-![come](come_action.gif)
+![come](gifs/come_action.gif)
 
 Follow
 
-![follow](follow_action.gif)
+![follow](gifs/follow_action.gif)
 
 Find (Red)
 
-![find](find_red_action.gif)
+![find](gifs/find_red_action.gif)
 
 Fetch (Green)
 
-![fetch](fetch_green_action.gif)
+![fetch](gifs/fetch_green_action.gif)
 
 
 
