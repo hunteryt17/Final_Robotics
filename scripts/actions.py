@@ -266,20 +266,6 @@ class ArmManipulator:
         self.move_group_gripper.go(gripper_joint_goal, wait=True)
         self.move_group_gripper.stop()
 
-    def sad_emote(self):
-        """complete sad emote for bot"""
-        arm_joint_goal = [1, 0.5, -0.5, 1.0]
-        self.move_group_arm.go(arm_joint_goal, wait=True)
-        self.move_group_arm.stop()
-        self.reset_arm_position()
-
-    def happy_emote(self):
-        """happy emote for bot"""
-        arm_joint_goal = [0, -0.5, -0.3, -0.15]
-        self.move_group_arm.go(arm_joint_goal, wait=True)
-        self.move_group_arm.stop()
-        self.reset_arm_position()
-
     def shake(self):
         """complete shake action for bot"""
         arm_joint_goal = [0, 0.5, -0.2, -0.2]

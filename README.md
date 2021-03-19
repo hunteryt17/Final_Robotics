@@ -62,8 +62,7 @@ experimenting with the velocity and gripper so that the dumbbell would not
 fall down when picked up from a variety of angles. Additional functionality was
 added through image processing to detect whether the dumbbell was successfully
 picked up and to try again if it failed. Finally, all of the arm control actions 
-were programmed based on what was asthetically good for the bot, such as `shake`
-and the emotes. 
+were programmed based on what was asthetically good for the bot, such as `shake`.
 
 ### 3. User Interface
 (implemented in `/scripts/user_interface.py`)
