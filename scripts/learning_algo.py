@@ -12,17 +12,18 @@ from robodog.msg import (
 )
 import random
 
-
+# Selects a random command action to complete by converting the q-values to
+# probability values
 def draw_random_action(choices, probabilities):
     # Greedy epsilon
     epsilon = [0.9, 0.1]
     choice = np.random.choice([True, False], p=epsilon)
 
-    # Determine if the action chould be randomly calculated
+    # Determine if the action should be randomly calculated
     if not choice:
         return np.random.choice(10)
     
-    # Normalize the quality matrix to positive value range
+    # Calculate a new positive range for the values in the matrix
     NewMax = 1
     NewMin = 0
     OldMin = min(probabilities) 
@@ -34,8 +35,9 @@ def draw_random_action(choices, probabilities):
     if sum(probabilities) == 0 or OldRange == 0:
         return random.choice(choices)
 
+    
+    # Normalize the quality matrix to the new positive range
     probability_sum = 0.0
-   
     for p in range(len(probabilities)):
         probabilities[p] = (((probabilities[p] - OldMin) * NewRange) / OldRange) + NewMin
         probability_sum += probabilities[p]
@@ -43,7 +45,7 @@ def draw_random_action(choices, probabilities):
     for p in range(len(probabilities)):
         probabilities[p] = probabilities[p] / probability_sum
 
-
+    # Select a random value using the new probabilities
     values = np.array(range(len(choices)))
     probs = np.array(probabilities)
     bins = np.add.accumulate(probs)
@@ -109,12 +111,61 @@ class LearningAlgo(object):
         #     LearningMatrixRow([0,0,0,0,0,0,0,0,0,1])
         # )
         self.matrix_pub.publish(self.q_matrix)
+ 
+    def get_user_command(self, data):
+        if not self.initialized:
+            return
+        self.user_command = data.command
 
+        # Begin action sequence once user command is received
+        self.select_action()
+        
+    def select_action(self):
+        if not self.initialized:
+            return
+
+        # Converts command to numeric
+        self.received_action = self.process_command()
+
+        # Select an action using the matrix values for the received action
+        actions = list(range(10))
+        probabilities = self.q_matrix.matrix[self.received_action].matrix_row[:]
+        self.selected_action = draw_random_action(
+            actions, probabilities
+        )
+
+        # Publish action for robot execution
+        action = Action()
+        action.action = self.selected_action
+        self.action_pub.publish(action)    
+   
+
+    def process_command(self):
+        if not self.initialized:
+            return
+        # Converts string command to integer value for matrix
+        command = self.user_command
+        commands = {
+            "fetch red": 0,
+            "fetch blue": 1,
+            "fetch green": 2,
+            "find red": 3,
+            "find blue": 4,
+            "find green": 5,
+            "come": 6,
+            "follow": 7,
+            "shake": 8,
+            "roll": 9,
+        }
+        action = commands[command]
+        return action
+    
     def get_reward(self, data):
         if not self.initialized:
             return
 
         self.reward = data.reward
+        # Update q-matrix whenver a new reward is received
         self.update_q_matrix()
 
     def update_q_matrix(self):
@@ -136,7 +187,8 @@ class LearningAlgo(object):
             reward = -10
         else:
             reward = self.reward
-
+        
+        # Calculate new q-value
         change = alpha * (
             (reward / 10.0) + gamma * max_action - current_val
         )
@@ -144,53 +196,6 @@ class LearningAlgo(object):
             self.selected_action] = current_val + change
 
         self.matrix_pub.publish(self.q_matrix)
-
-    def get_user_command(self, data):
-        if not self.initialized:
-            return
-        self.user_command = data.command
-
-        # Begin action sequence once user command is received
-        self.select_action()
-
-    def process_command(self):
-        if not self.initialized:
-            return
-        # Converts string command to integer value for matrix
-        command = self.user_command
-        commands = {
-            "fetch red": 0,
-            "fetch blue": 1,
-            "fetch green": 2,
-            "find red": 3,
-            "find blue": 4,
-            "find green": 5,
-            "come": 6,
-            "follow": 7,
-            "shake": 8,
-            "roll": 9,
-        }
-        action = commands[command]
-        return action
-
-    def select_action(self):
-        if not self.initialized:
-            return
-
-        # Converts command to numeric
-        self.received_action = self.process_command()
-
-        # Select an action using the matrix values for the received action
-        actions = list(range(10))
-        probabilities = self.q_matrix.matrix[self.received_action].matrix_row[:]
-        self.selected_action = draw_random_action(
-            actions, probabilities
-        )
-
-        # Publish action for robot execution
-        action = Action()
-        action.action = self.selected_action
-        self.action_pub.publish(action)
 
     def run(self):
         while not rospy.is_shutdown():
