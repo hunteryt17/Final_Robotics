@@ -12,7 +12,7 @@
 3. `rosrun robodog user_interface.py`
 
 #### Trained Dog
-1. Uncomment lines 100 - 111 in `scripts\learning_algo.py`
+1. Uncomment lines 101 - 112 in `scripts\learning_algo.py`
 2. `roscore`
 3. `roslaunch robodog robodog.launch`
 4. `rosrun robodog user_interface.py`
