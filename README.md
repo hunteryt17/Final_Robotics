@@ -5,11 +5,20 @@
 **Team members: Li Arditi, Kiana Hobbs, Hunter Thompson, Sebastian Villegas Mejia**
 
 ## How to Run Program
+
 #### RoboDog Program:
 1. `roscore`
 2. `roslaunch robodog robodog.launch`
 3. `rosrun robodog user_interface.py`
+
+#### Trained Dog
+1. Uncomment lines 100 - 111 in `scripts\learning_algo.py`
+2. `roscore`
+3. `roslaunch robodog robodog.launch`
+4. `rosrun robodog user_interface.py`
+
 #### Covergence Script:
+*The size of our state space prevents the matrix from completely converging before the machine throws an error*
 1. `roscore`
 2. `rosun robodog learning_algo.py`
 3. `rosrun robodog phantom_movement.py`
@@ -31,7 +40,7 @@ The major robotics algorithm used to accomplish this behavior was a reinforcemen
 
 `/scripts/learning_algo.py`
 
-To emphasize the training aspect of our RoboDog, we wanted to ensure that there was some form of learning involved in determining how the RoboDog would react to commands. To implement the idea of exploration over exploitation, we used the Q-Learning Algorithm, a probability space, and a greedy epsilon. We initialized a Q-Matrix (`initialize_matrix()`) on the given command and the command executed, such as the user inputs "fetch blue" (given command) and the RoboDog completes the action "roll" (command executed).
+To emphasize the training aspect of our RoboDog, we wanted to ensure that there was some form of learning involved in determining how the RoboDog would react to commands. To implement the idea of exploration over exploitation, we used the Q-Learning Algorithm, a probability space, and a greedy epsilon. We initialized a Q-Matrix (`initialize_matrix()`) on the given command and the command executed, for instance, the user inputs would be the given command and the action that the RoboDog completes would be the command executed.
 
 ![Learning Process Diagram](images/learning_process_diagram.png)
 
