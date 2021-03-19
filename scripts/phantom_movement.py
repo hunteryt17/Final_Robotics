@@ -59,13 +59,51 @@ class PhantomDogMovement(object):
         }
 
         self.robot_command_to_take = None
+        # Tracks the number of tricks that have converged
         self.action_num = 0
         self.initialized = True
         print("Phantom initialization complete")
         print("WARNING: Whether the matrix converges depends on each individual trick run. Runs can take anywhere from 50 to 500 iterations to converge. ")
 
         self.execute_robot_action()
+        
+    def execute_robot_action(self):
+        # Robot action iterator
+        if not self.initialized:
+            return 
+        time.sleep(0.5)
+        
+        if self.action_num < 10:
+            # Get and send robot action
+            self.robot_command_to_take = self.select_command()
+            command = UserCommand()
+            command.command = self.robot_command_to_take
+            self.command_pub.publish(command)
+            self.action_status_pub.publish(ActionStatus(status ="Complete"))
+            # Wait for publisher to update
+            while self.action_status != "Complete":
+                pass
+            
+            # Determine reward
+            reward = self.all_or_nothing_rewarding(
+                self.robot_command_to_take, self.action_sent)
+            self.reward_pub.publish(reward)
+            self.action_status_pub.publish(ActionStatus(status = "Idle"))
 
+            self.action_iteration += 1
+            
+            # Start checking convergence after 20 iterations
+            if self.action_iteration > 20:
+                self.check_convergence()
+            
+            self.execute_robot_action()
+    
+     def all_or_nothing_rewarding(self, actual_command, processed_commad):
+        # Trains the model without partial rewarding, i.e. either correct (10) or nothing (0)
+        if self.action_num == processed_commad:
+            return 10
+        return 0
+    
     def check_convergence(self):
         # Convergence checker
         # If a value has a probability > 99%, it is considered as converged
@@ -120,41 +158,6 @@ class PhantomDogMovement(object):
             "roll"
         ]
         return actions[self.action_num]
-        
-    def all_or_nothing_rewarding(self, actual_command, processed_commad):
-        # Trains the model without partial rewarding, i.e. either correct or nothing
-        if self.action_num == processed_commad:
-            return 10
-        return 0
-
-    def execute_robot_action(self):
-        if not self.initialized:
-            return 
-        time.sleep(0.5)
-
-        if self.action_num < 10:
-            # Get and send robot action
-            self.robot_command_to_take = self.select_command()
-            command = UserCommand()
-            command.command = self.robot_command_to_take
-            self.command_pub.publish(command)
-            self.action_status_pub.publish(ActionStatus(status ="Complete"))
-            while self.action_status != "Complete":
-                pass
-            
-            # Determine reward
-            reward = self.all_or_nothing_rewarding(
-                self.robot_command_to_take, self.action_sent)
-            self.reward_pub.publish(reward)
-            self.action_status_pub.publish(ActionStatus(status = "Idle"))
-
-            self.action_iteration += 1
-            
-            # Start checking convergence after 20 iterations
-            if self.action_iteration > 20:
-                self.check_convergence()
-            
-            self.execute_robot_action()
 
 
     def get_action_status(self, data):
