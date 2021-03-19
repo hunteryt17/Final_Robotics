@@ -31,6 +31,7 @@ The goal of this project is to program a robot to be pet-like because we wanted 
 
 The major robotics algorithm used to accomplish this behavior was a reinforcement learning algorithm that used reward values given by the user once the robot completed an action. The other main components included robot perception and movement and the user interface. The three components interacted with each other through custom ros topics and messages. First, the user interface prompts the user for a command. If that command is valid then it publishes to `/robodog/user_cmd` which the learning algorithm node subscribes to. Based on the current matrix in `/robodog/learning_matrix`, it decides the action the robot will take and publishes it to `/robodog/action` which the action execution node subscribes to. Once the action is complete, the action execution node publishes the status of the robot/action and which action it completed/attempted to `/robodog/action_status` which the user interface node subscribes to. Once the user interface node receives that the action was complete (or failed), it prompts the user for a reward which is published to `/robodog/action_reward` for the learning algorithm node to receive and update the matrix with. 
 
+![Learning Process Diagram](images/learning_process_diagram.png)
 
 ## System Architecture:
 
@@ -41,8 +42,6 @@ The major robotics algorithm used to accomplish this behavior was a reinforcemen
 `/scripts/learning_algo.py`
 
 To emphasize the training aspect of our RoboDog, we wanted to ensure that there was some form of learning involved in determining how the RoboDog would react to commands. To implement the idea of exploration over exploitation, we used the Q-Learning Algorithm, a probability space, and a greedy epsilon. We initialized a Q-Matrix (`initialize_matrix()`) on the given command and the command executed, for instance, the user inputs would be the given command and the action that the RoboDog completes would be the command executed.
-
-![Learning Process Diagram](images/learning_process_diagram.png)
 
 ![Matrix Diagram](images/matrix_diagram.png)
 
