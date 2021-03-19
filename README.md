@@ -11,7 +11,7 @@
 2. `roslaunch robodog robodog.launch`
 3. `rosrun robodog user_interface.py`
 
-#### Trained Dog
+#### Trained Dog:
 1. Uncomment lines 101 - 112 in `scripts\learning_algo.py`
 2. `roscore`
 3. `roslaunch robodog robodog.launch`
@@ -151,7 +151,6 @@ was much simpler to launch the bot in the launch file instead.
 
 ## ROS bags
 1. A ros bag titled "convergence.bags" includes the recording of the `/scripts/learning_algo.py` and `/scripts/phantom_movement.py` on a diagonal matrix.
-2. 
 
 ## Final Product Gifs
 
