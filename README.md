@@ -39,7 +39,7 @@ The major robotics algorithm used to accomplish this behavior was a reinforcemen
 
 (implemented in `/scripts/learning_algo.py` and tested in `/scripts/phantom_movement.py`)
 
-`/scripts/learning_algo.py`
+#### `/scripts/learning_algo.py`
 
 To emphasize the training aspect of our RoboDog, we wanted to ensure that there was some form of learning involved in determining how the RoboDog would react to commands. To implement the idea of exploration over exploitation, we used the Q-Learning Algorithm, a probability space, and a greedy epsilon. We initialized a Q-Matrix (`initialize_matrix()`) on the given command and the command executed, for instance, the user inputs would be the given command and the action that the RoboDog completes would be the command executed.
 
@@ -49,11 +49,23 @@ To draw a random action (`draw_random_action()`) from the learning matrix, we no
 
 Whenever a reward was published, the Q-Matrix would update for the given cell (`update_q_matrix()`). The published rewards were scaled down to be out of 1 from 10. Also, if the RoboDog received a 0 reward from the user, that reward is converted to a negative 10, or -1 scaled down, to include negative reinforcement. Moreover, given the large state space for our algorithm, we had to select an alpha of 1 and a gamma of 0.01 to have a semi-reasonable speed learning time. However, even with this alpha and gamma, it could take up to 300 iterations to converge a single command. 
 
-`/scripts/phantom_movement.py`
+##### Code Structure
+1. Matrix initialized (`initialize_matrix()`)
+2. User command received from user command subscriber (`get_user_command()`)
+3. Process to select action begins (`select_action()`)
+   1. Convert string command to numeric representation, i.e "fetch red" = 0, "fetch blue" = 1, ..., "roll" = 9 (`process_command()`)
+   2. Select random action using the Q-Matrix as probability values (`draw_random_action()`)
+   3. Publish action to the action message for action executor
+4. *Wait for user to give RoboDog a reward*
+5. Reward received from reward subscriber (`get_reward()`)
+6. Update the learning matrix using the reward (`update_q_matrix()`)
+
+#### `/scripts/phantom_movement.py`
 
 Given our program is user command driven and not completely automated, we developed a phantom movement script, similar to that from the Q-Learning project to gauge learning speed and convergence. The phantom script implements an all or nothing rewarding system (either the command is right, 10, or wrong, 0), that iterates through the possible commands (`execute_robot_action()`) until convergence is reached for each trick. We check convergence by implementing the normalizing function from the learning matrix to see if the matrix cell for where the given command matches the executed command has a probability of more than 99% (`check_convergence()`). We initially had determined convergence at a higher probability, but for the sake of speedy up the convergence process, we lowered it to its current value. 
 
 Due to the large state space, a zero matrix is unable to reach convergence before the system times out because of warnings, such as too much recursion (after about 900 iterations) or storage overflow. As such to test the "trained" dog, we added a section in the `/scripts/learning_algo.py` that can be uncommented to initialize the starting matrix to a diagonal matrix.
+
 
 ### 2. Robot Perception and Movement
 
