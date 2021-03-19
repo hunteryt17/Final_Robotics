@@ -6,17 +6,13 @@
 
 ## How to Run Program
 #### RoboDog Program:
-
+0. `roscore`
+1. `roslaunch robodog robodog.launch`
+2. `rosrun robodog user_interface.py`
 #### Covergence Script:
 1. `roscore`
 2. `rosun robodog learning_algo.py`
 3. `rosrun robodog phantom_movement.py`
-
-#### User Interface
-0. `roscore`
-1. `roslaunch robodog robodog.launch`
-2. `rosrun robodog user_interface.py`
-
 
 ## Project Description
 
